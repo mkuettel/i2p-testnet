@@ -66,24 +66,25 @@ in {
     #limits = {
     #  coreSize = ;
     #};
-  };
 
-  reseed = {
-    # file = ;
-    # floodfill
-    # urls
-    # verify
-  };
+    reseed = {
+      # file = ;
+      # floodfill
+      # urls
+      # verify
+    };
 
-  # upnp = {
-  #   enable = false;
-  #   name = "I2Pd";
-  # };
+    # upnp = {
+    #   enable = false;
+    #   name = "I2Pd";
+    # };
 
-  websocket = {
-    # enable = true;
-    address = "127.0.0.1";
-    name = "websockets";
-    port = 7666; #default
+    websocket = {
+      # enable = true;
+      address = "127.0.0.1";
+      name = "websockets";
+      port = 7666; #default
+    };
+
   };
 }
