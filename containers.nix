@@ -6,19 +6,29 @@ let
 
   mkNodeConfig = id: {
     inherit id;
-    name = "node-${id}";
+    name = "i2p-node-${builtins.toString id}";
   };
 
   mkContainerNode = nodeConfig: {
+    autoStart = true;
+    # rebuild container from scratch (more reproducability, but takes longer to start tests)
+    ephemeral = true;
+    # bindMounts = {
+    #     "/home/i2p"
+    # };
     config = import ./machines/node/configuration.nix;
   };
 
   mkContainerNodes = testNetConfig:
     let
       nodeIdList = (lib.range 1 testNetConfig.nodes.amount);
-      nodesConfigList = lib.forEach nodeIdList (id: {
-        "i2p-node-${builtins.toString id}" = mkContainerNode (mkNodeConfig id);
-      });
+      nodesConfigList = lib.forEach nodeIdList (id:
+        let
+          nodeConfig = (mkNodeConfig id);
+        in {
+          "${nodeConfig.name}" = mkContainerNode nodeConfig;
+        }
+      );
     in lib.zipAttrsWith (name: values: lib.findFirst (v: true) {} values) nodesConfigList;
 in {
 
