@@ -1,8 +1,12 @@
 { config, pkgs, ... }: 
 
 {
-  nixpkgs.packageOverrides = super: let self = super.pkgs; in {
-    i2pd = super.callPackage ./pkgs/i2pd/default.nix { };
-    i2ptools = super.callPackage ./pkgs/i2p-tools { };
-  };
+  nixpkgs.overlays = [
+    (self: super: rec {
+      mogi2pd = super.callPackage ./pkgs/i2pd { };
+      i2p-tools = super.callPackage ./pkgs/i2p-tools {
+        inherit mogi2pd;
+      };
+    })
+  ];
 }

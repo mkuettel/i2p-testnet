@@ -21,9 +21,12 @@ let
       });
     in lib.zipAttrsWith (name: values: lib.findFirst (v: true) {} values) nodesConfigList;
 in {
+
   network.description = "I2Pd Container Teststand";
 
   i2ptestnet = { config, pkgs, ... }: {
+    imports = [ ./nixpkgs.nix ];
+
     boot.enableContainers = true;
 
     containers = mkContainerNodes testNetConfig;
