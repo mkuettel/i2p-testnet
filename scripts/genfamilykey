@@ -1,0 +1,19 @@
+#!/usr/bin/env nix-shell
+#!nix-shell -p openssl -i bash
+
+set -eux -o pipefail
+
+if [ "$#" -lt 1 ]; then
+    echo "Usage: $0 family-name"
+    exit 1
+fi
+
+family="$1"
+
+# These commands are taken from: https://i2pd.readthedocs.io/en/latest/user-guide/family/
+openssl ecparam -name prime256v1 -genkey -out "$family".key  
+openssl req -new -key "$family".key -out "$family".csr  
+touch v3.ext
+openssl x509 -req -days 3650 -in "$family".csr -signkey "$family".key -out "$family".crt -extfile v3.ext
+
+exit 0
