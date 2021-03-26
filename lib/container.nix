@@ -1,28 +1,30 @@
-{
-  mkNode = testNetConfig: nodeConfig: rec {
-    config = import ../machines/node/configuration.nix { inherit nodeConfig; inherit testNetConfig; };
+rec {
 
+  commonSettings = {
     autoStart = true;
-    # rebuild container from scratch (more reproducability, but takes longer to start tests)
     ephemeral = true;
-    # bindMounts = {
-    #     "/home/i2p"
-    # };
 
     # don't share interfaces with the host
     # give the containers an own network interface, so the containers don't bind 
     # on ports on the host
     privateNetwork = true;
+  };
+
+  mkNode = testNetConfig: nodeConfig: rec {
+    config = import ../machines/node/configuration.nix { inherit nodeConfig; inherit testNetConfig; };
+
+    # rebuild container from scratch (more reproducability, but takes longer to start tests)
+    # bindMounts = {
+    #     "/home/i2p"
+    # };
+
     # hostBridge = "br${builtins.toString nodeConfig.id}";
     hostAddress = nodeConfig.hostAddress;
     localAddress = nodeConfig.localAddress;
-  };
+  } // commonSettings;
 
   mkReseederNode = testNetConfig: {
       config = import ../machines/seeder/configuration.nix;
-      autoStart = true;
-      ephemeral = true;
-      privateNetwork = true;
 
       # extraVeths = {
       #   "v-host" = {
@@ -36,5 +38,5 @@
       hostAddress = "10.0.0.1";
       # hostBridge = "br0";
       # inherit hostAddress;
-  };
+  } // commonSettings;
 }
