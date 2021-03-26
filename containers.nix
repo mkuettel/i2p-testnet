@@ -7,17 +7,15 @@ let
   node = import ./lib/node.nix;
   container  = import ./lib/container.nix;
 
-  mkContainerNodes = testNetConfig:
-    let
+  nodeConfigs = let
       nodeIdList = (lib.range 1 testNetConfig.nodes.amount);
-      nodesConfigList = lib.forEach nodeIdList (id:
-        let
-          nodeConfig = (node.mkConfig id);
-        in {
-          "${nodeConfig.name}" = container.mkNode testNetConfig nodeConfig;
-        }
-      );
-    in lib.zipAttrsWith (name: values: lib.findFirst (v: true) {} values) nodesConfigList;
+  in lib.forEach nodeIdList node.mkConfig;
+
+  mkContainerNodes = testNetConfig: let
+      containerNodes = lib.forEach nodeConfigs (nodeConfig: {
+        "${nodeConfig.name}" = container.mkNode testNetConfig nodeConfig;
+      });
+    in lib.zipAttrsWith (name: values: lib.findFirst (v: true) {} values) containerNodes;
 in {
 
   network.description = "I2Pd Container Teststand";
