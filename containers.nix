@@ -6,10 +6,7 @@ let
 
   hostAddress = "10.23.0.1/16";
 
-  mkNodeConfig = id: {
-    inherit id;
-    name = "i2p-${builtins.toString id}";
-  };
+  node = import ./lib/node.nix;
 
   mkContainerNode = nodeConfig: rec {
     config = import ./machines/node/configuration.nix;
@@ -26,20 +23,9 @@ let
     # on ports on the host
     privateNetwork = true;
     # hostBridge = "br${builtins.toString nodeConfig.id}";
-
-  } // (let
-      hostsPerSegment = 254;
-      addressNr = nodeConfig.id * 2;
-      segmentNr = addressNr / hostsPerSegment;
-      # plus 1 here so the nodes start at address 10.23.*1*.1
-      # and doesn't conflict with the reseeder
-      segment3 = builtins.toString (segmentNr + 1);
-      segment4host = builtins.toString (addressNr - (segmentNr * hostsPerSegment));
-      segment4local = builtins.toString (addressNr - (segmentNr * hostsPerSegment));
-    in {
-      hostAddress = "192.168.${segment3}.${segment4host}";
-      localAddress = "192.168.${segment3}.${segment4local}";
-  });
+    hostAddress = nodeConfig.hostAddress;
+    localAddress = nodeConfig.localAddress;
+  };
 
   mkReseederNode = testNetConfig: {
     "i2p-reseed" = {
@@ -68,7 +54,7 @@ let
       nodeIdList = (lib.range 1 testNetConfig.nodes.amount);
       nodesConfigList = lib.forEach nodeIdList (id:
         let
-          nodeConfig = (mkNodeConfig id);
+          nodeConfig = (node.mkConfig id);
         in {
           "${nodeConfig.name}" = mkContainerNode nodeConfig;
         }
