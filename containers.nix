@@ -35,7 +35,7 @@ in {
   network.description = "I2Pd Container Teststand";
 
   i2ptestnet = { config, pkgs, ... }: {
-    imports = [ ./nixpkgs.nix ];
+    imports = [ ./mypkgs.nix ];
 
     boot.enableContainers = true;
 

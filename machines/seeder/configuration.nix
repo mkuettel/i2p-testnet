@@ -2,7 +2,7 @@
 
 {
   imports = [
-    ../../sevices/i2p-reseed
+    ../base/configuration.nix
   ];
   environment.systemPackages = with pkgs; [ i2p-tools ];
 }
