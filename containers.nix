@@ -6,7 +6,7 @@ let
 
   mkNodeConfig = id: {
     inherit id;
-    name = "i2p-node-${builtins.toString id}";
+    name = "i2p-${builtins.toString id}";
   };
 
   mkContainerNode = nodeConfig: {
@@ -18,13 +18,19 @@ let
     # bindMounts = {
     #     "/home/i2p"
     # };
+
+    # don't share interfaces with the host
+    # give the containers an own network interface, so the containers don't bind 
+    # on ports on the host
+    privateNetwork = true;
   };
 
   mkReseederNode = testNetConfig: {
-    "i2p-reseeder" = {
+    "i2p-reseed" = {
       config = import ./machines/seeder/configuration.nix;
       autoStart = true;
       ephemeral = true;
+      privateNetwork = true;
     };
   };
 
