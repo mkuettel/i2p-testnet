@@ -30,6 +30,7 @@ in {
       "i2p-reseed" = (container.mkReseederNode testNetConfig);
       } // (mkContainerNodes testNetConfig);
  
+    networking.enableIPv6 = false;
     # make sure network manager doesn't interfere with the container interfaces
     networking.networkmanager.unmanaged = [ "interface-name:ve-*" ];
 
