@@ -11,6 +11,12 @@ in {
   services.i2pd = {
     enable = true;
 
+    logLevel = "warn";
+
+    # don't no nat by pass (private isolate)
+    nat = false;
+    netid = 23;
+
     # address if this device
     inherit address;
     enableIPv6 = false;
