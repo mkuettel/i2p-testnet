@@ -1,12 +1,35 @@
 { nodeConfig, testNetConfig }:
 
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
   imports = [
     ../base/configuration.nix
     ../../services/nginx/nginx.nix
   ];
+
+  networking = {
+    enableIPv6 = true;
+
+    # disable dhcp client
+    dhcpcd.enable = false;
+
+    # set the default gateway to the address
+    # of the VM host for this container
+    defaultGateway6 = {
+      interface = "${nodeConfig.interfaceName}";
+      address = nodeConfig.hostAddress6;
+    };
+    #
+    interfaces."${nodeConfig.interfaceName}" = {
+      # virtual = true;
+      useDHCP = false;
+      ipv6.addresses = [{
+        address = nodeConfig.localAddress6;
+        prefixLength = nodeConfig.prefixLength6;
+      }];
+    };
+  };
 
   services.i2pd = {
     enable = true;
@@ -18,12 +41,14 @@
     netid = 23;
 
     # address of this device
-    address = nodeConfig.hostAddress; # or localAddress??
+    # address = nodeConfig.hostAddress; # or localAddress??
 
-    enableIPv6 = false;
-    enableIPv4 = true;
+    address = nodeConfig.localAddress6;
 
-    ifname = nodeConfig.ifname;
+    enableIPv6 = true;
+    enableIPv4 = false;
+
+    ifname = nodeConfig.interfaceName;
 
     # addressbook = {
       # defaulturl = 
@@ -43,7 +68,7 @@
         quantity = 10;
       };
     };
-    family = "mognet";
+    # family = "mognet";
 
     trust = {
       # family = # router familiy to trust for first hop
@@ -95,5 +120,4 @@
     };
 
   };
-
 }
