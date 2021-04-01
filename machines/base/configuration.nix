@@ -5,5 +5,5 @@
     ../../mypkgs.nix
   ];
 
-  networking.enableIPv6 = true;
+  networking.enableIPv6 = false;
 }

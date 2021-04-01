@@ -9,26 +9,47 @@
   ];
 
   networking = {
-    enableIPv6 = true;
+    enableIPv6 = false;
+
+    firewall.enable = false;
 
     # disable dhcp client
     dhcpcd.enable = false;
 
     # set the default gateway to the address
     # of the VM host for this container
-    defaultGateway6 = {
-      interface = "${nodeConfig.interfaceName}";
-      address = nodeConfig.hostAddress6;
+    defaultGateway = {
+      interface = "eth0";
+      address = nodeConfig.hostAddress;
     };
-    #
-    interfaces."${nodeConfig.interfaceName}" = {
-      # virtual = true;
-      useDHCP = false;
-      ipv6.addresses = [{
-        address = nodeConfig.localAddress6;
-        prefixLength = nodeConfig.prefixLength6;
-      }];
-    };
+    # defaultGateway6 = {
+    #   interface = "${nodeConfig.interfaceName}";
+    #   address = nodeConfig.hostAddress6;
+    # };
+    # #
+    # interfaces."eth0" = {
+    #   # virtual = true;
+    #   useDHCP = false;
+    #   ipv4.addresses = [{
+    #     address = nodeConfig.localAddress;
+    #     prefixLength = nodeConfig.netmask;
+    #   }];
+    # };
+    # # these routes are added on the interface of the host
+    # interfaces."${nodeConfig.interfaceName}" = {
+    #   ipv4.routes = [{
+    #     address = nodeConfig.hostAddress;
+    #     prefixLength = nodeConfig.netmask;
+    #   }];
+    # };
+    # interfaces."${nodeConfig.interfaceName}" = {
+    #   # virtual = true;
+    #   useDHCP = false;
+    #   ipv6.addresses = [{
+    #     address = nodeConfig.localAddress6;
+    #     prefixLength = nodeConfig.prefixLength6;
+    #   }];
+    # };
   };
 
   services.i2pd = {
@@ -43,10 +64,10 @@
     # address of this device
     # address = nodeConfig.hostAddress; # or localAddress??
 
-    address = nodeConfig.localAddress6;
+    # address = nodeConfig.localAddress6;
 
-    enableIPv6 = true;
-    enableIPv4 = false;
+    enableIPv6 = false;
+    enableIPv4 = true;
 
     ifname = nodeConfig.interfaceName;
 

@@ -14,9 +14,9 @@ rec {
   mkNode = testNetConfig: nodeConfig: rec {
     config = import ../machines/node/configuration.nix { inherit nodeConfig; inherit testNetConfig; };
 
-    # extraFlags = [
-    #   "--network-veth"
-    # ];
+    extraFlags = [
+      "--network-veth"
+    ];
     # rebuild container from scratch (more reproducability, but takes longer to start tests)
     # bindMounts = {
     #     "/home/i2p"
@@ -34,7 +34,7 @@ rec {
     # localAddress = nodeConfig.localAddress;
     # hostAddress6 = nodeConfig.hostAddress6;
     # localAddress6 = nodeConfig.localAddress6;
-    interfaces = [ nodeConfig.interfaceName ];
+    # interfaces = [ nodeConfig.interfaceName ];
   } // commonSettings;
 
   mkReseederNode = testNetConfig: {

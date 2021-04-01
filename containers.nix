@@ -29,37 +29,37 @@ in {
       } // (mkContainerNodes testNetConfig);
  
     networking = {
-      enableIPv6 = true;
+      enableIPv6 = false;
 
       firewall = {
-        # enable = false;
+        enable = false;
         allowedTCPPorts = [ 22 ]; # ssh
       };
 
-      interfaces = let
-        interfaceAddresses = lib.forEach nodeConfigs (nodeConfig: {
-          "${nodeConfig.interfaceName}" = {
-            virtual = true;
-            useDHCP = false;
-            ipv6 = {
-              routes = [{
-                address = nodeConfig.networkAddress6;
-                prefixLength = nodeConfig.prefixLength6;
-              }];
-              addresses = [{
-                address = nodeConfig.hostAddress6;
-                prefixLength = nodeConfig.prefixLength6;
-              }];
-            };
-          };
-        });
-      in lib.zipAttrsWith (name: values: lib.findFirst (v: true) {} values) interfaceAddresses; 
+      # interfaces = let
+      #   interfaceAddresses = lib.forEach nodeConfigs (nodeConfig: {
+      #     "${nodeConfig.interfaceName}" = {
+      #       virtual = true;
+      #       useDHCP = false;
+      #       ipv6 = {
+      #         routes = [{
+      #           address = nodeConfig.networkAddress6;
+      #           prefixLength = nodeConfig.prefixLength6;
+      #         }];
+      #         addresses = [{
+      #           address = nodeConfig.hostAddress6;
+      #           prefixLength = nodeConfig.prefixLength6;
+      #         }];
+      #       };
+      #     };
+      #   });
+      # in lib.zipAttrsWith (name: values: lib.findFirst (v: true) {} values) interfaceAddresses; 
 
-      # nat = {
-      #   enable = true;
-      #   internalInterfaces = ["ve-+"];
-      #   externalInterface = "enp0s3"; # TODO: is this garuanteed to be here? only in VMWARE?
-      # };
+      nat = {
+        enable = true;
+        internalInterfaces = ["ve-+"];
+        externalInterface = "enp0s3"; # TODO: is this garuanteed to be here? only in VMWARE?
+      };
       networkmanager.unmanaged = [ "interface-name:ve-*" ];
     };
     # networking.bridges."br0" = { rstp = false; interfaces = ["ve-i2p-reseed"]; };
