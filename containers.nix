@@ -69,7 +69,20 @@ in {
 
     environment.systemPackages = with pkgs; [ i2p-tools ];
 
-    # disable guest addtions because we get the wrong version of it most of the time
+    users.users.tester = {
+      group = "tester";
+      description = "The Tester user";
+      createHome = true;
+      uid = 1000;
+      extraGroups = ["wheel"];
+      initialPassword = "i2ptest";
+      isNormalUser = true;
+    };
+
+    users.groups.tester.gid = 1000;
+
+
+    # disable guest additions because we get the wrong version of it most of the time
     # and i don't want to restart and upgrade virtualbox every time to make it all work.
     virtualisation.virtualbox.guest.enable = lib.mkForce false;
     virtualisation.virtualbox.guest.x11 = false;
