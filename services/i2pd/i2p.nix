@@ -8,5 +8,6 @@ in {
  #    addresses = [ { inherit address; prefixLength = 24; } ];
  #  };
  #};
+  security.pki.certificateFiles = [ "${pkgs.i2p-testnet-reseed-keys}/mkuettel_at_mail.i2p.pem" ];
 
 }

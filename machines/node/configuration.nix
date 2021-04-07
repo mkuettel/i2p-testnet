@@ -117,7 +117,7 @@
     reseed = {
       # file = ;
       # floodfill
-      # urls
+      urls = [ "http://10.23.0.2:8443/i2pseeds.su3"];
       verify = true;
     };
 

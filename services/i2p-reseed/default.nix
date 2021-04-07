@@ -2,10 +2,6 @@
 
 let
   home = "/var/lib/i2pd";
-  startScript = pkgs.writeScript ''
-    #!/bin/sh
-    ${pkgs.i2p-tools}/bin
-  '';
 in {
   # reuse i2pd user here, because normally a node would also contain a reseeder
   # plus we get a good working directory /var/lib/i2pd
@@ -39,6 +35,9 @@ in {
       '';
     };
   };
+
+  # the reseeder runs on this port
+  networking.firewall.allowedTCPPorts = [ 8443 ];
 
   environment.systemPackages = [ pkgs.i2p-testnet-reseed-keys ];
 }
