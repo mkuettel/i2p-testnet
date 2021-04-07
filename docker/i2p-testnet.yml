@@ -21,20 +21,18 @@
 version: "3.8"
 services:
   i2pd:
-    image: divax/i2p:latest
-    restart: unless-stopped
-    environment:
-      ENABLE_TUNNELS: 1
+    extends:
+      file: base-services.yml
+      service: i2pd
     volumes:
       - n1.i2pd.local:/home/i2pd/
-    ports:
-      - 7070:7070
-      - 4444:4444
-      - 4445:4445
     networks:
       - network.i2pd.local
 
   reseed:
+    extends:
+      file: base-services.yml
+      service: i2pd
     image: divax/i2p-reseed
     ports:
       - 8443
