@@ -1,0 +1,10 @@
+services:
+  reseed:
+    extends:
+      file: base-services.yml
+      service: i2pd
+    image: divax/i2p-reseed
+    ports:
+      - 8443
+    networks:
+      - i2ptestnet

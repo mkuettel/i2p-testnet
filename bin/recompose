@@ -21,6 +21,8 @@ OVERRIDES=()
 
 if [[ "$(getconf network.private)" != "true" ]]; then
     OVERRIDES+=("-f" "$base_dir/docker/publicnet.override.yml")
+else
+    OVERRIDES+=("-f" "$base_dir/docker/privatenet.override.yml")
 fi
 
 export NETWORK_NAME

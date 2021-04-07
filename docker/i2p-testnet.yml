@@ -27,20 +27,10 @@ services:
     volumes:
       - n1.i2pd.local:/home/i2pd/
     networks:
-      - privatenet
-
-  reseed:
-    extends:
-      file: base-services.yml
-      service: i2pd
-    image: divax/i2p-reseed
-    ports:
-      - 8443
-    networks:
-      - privatenet
+      - i2ptestnet
 
 networks:
-  privatenet:
+  i2ptestnet:
     name: "${NETWORK_NAME}"
     internal: true
     ipam:
