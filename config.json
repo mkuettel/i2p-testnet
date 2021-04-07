@@ -1,8 +1,9 @@
 {
     "network": {
+        "name":"network.i2pd.local",
         "private": true
     },
     "nodes": {
-        "amount": 10
+        "amount": 11
     }
 }
