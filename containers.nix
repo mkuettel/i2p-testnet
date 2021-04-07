@@ -1,6 +1,5 @@
 let
-  pkgs = import <nixpkgs> { };
-  lib = pkgs.lib;
+  lib = import <nixpkgs/lib>;
   config = import ./lib/config.nix;
   testNetConfig = config.read ./config.nix;
 
