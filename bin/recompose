@@ -10,15 +10,14 @@ getconf() {
 }
 
 
-network_name="$(getconf 'network.name')"
+NETWORK_NAME="$(getconf network.name)"
 
-
-if docker network list | grep -F "$network_name"; then
-    echo "Removing network $network_name as it already exists."
-    docker network rm "$network_name"
+if docker network list | grep -F "$NETWORK_NAME"; then
+    echo "Removing network $NETWORK_NAME as it already exists."
+    docker network rm "$NETWORK_NAME"
 fi
 
-
+export NETWORK_NAME
 docker-compose -f docker/i2p-testnet.yml up \
     --build \
     --remove-orphans \

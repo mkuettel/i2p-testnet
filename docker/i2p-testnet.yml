@@ -27,7 +27,7 @@ services:
     volumes:
       - n1.i2pd.local:/home/i2pd/
     networks:
-      - network.i2pd.local
+      - privatenet
 
   reseed:
     extends:
@@ -37,11 +37,11 @@ services:
     ports:
       - 8443
     networks:
-      - network.i2pd.local
+      - privatenet
 
 networks:
-  network.i2pd.local:
-    name: network.i2pd.local
+  privatenet:
+    name: "${NETWORK_NAME}"
     internal: true
     ipam:
       driver: default
