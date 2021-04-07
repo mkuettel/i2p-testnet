@@ -2,7 +2,7 @@
   private = true;
 
   nodes = {
-    amount = 8;
+    amount = 2;
     family = "testnet";
   };
 }

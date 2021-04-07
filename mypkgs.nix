@@ -3,7 +3,7 @@
 {
   # For now just use the stable channel for less breakage
   # TODO: pin this?
-  nix.nixPath = [ "nixpkgs=https://nixos.org/channels/nixos-20.09/nixexprs.tar.xz" ];
+  # nix.nixPath = [ "nixpkgs=https://github.com/NixOS/nixpkgs/archive/29363442f5e6b14d3f2fdfd5f13605a47bd02301.tar.gz" ];
 
   nixpkgs.overlays = [
     (self: super: rec {
