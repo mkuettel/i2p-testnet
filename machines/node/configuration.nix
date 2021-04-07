@@ -5,23 +5,16 @@
 {
   imports = [
     ../base/configuration.nix
-    ../../services/nginx/nginx.nix
   ];
 
   networking = {
-    enableIPv6 = false;
-
-    firewall.enable = false;
-
-    # disable dhcp client
-    dhcpcd.enable = false;
 
     # set the default gateway to the address
     # of the VM host for this container
-    defaultGateway = {
-      interface = "eth0";
-      address = nodeConfig.hostAddress;
-    };
+    # defaultGateway = {
+    #   interface = "eth0";
+    #   address = nodeConfig.hostAddress;
+    # };
     # defaultGateway6 = {
     #   interface = "${nodeConfig.interfaceName}";
     #   address = nodeConfig.hostAddress6;
@@ -64,12 +57,12 @@
     # address of this device
     # address = nodeConfig.hostAddress; # or localAddress??
 
-    # address = nodeConfig.localAddress6;
+    address = nodeConfig.localAddress;
 
     enableIPv6 = false;
     enableIPv4 = true;
 
-    ifname = nodeConfig.interfaceName;
+    ifname = "eth0";
 
     # addressbook = {
       # defaulturl = 

@@ -9,14 +9,18 @@ rec {
     # on ports on the host
     privateNetwork = true;
     additionalCapabilities = [ "CAP_NET_ADMIN" "CAP_MKNOD"];
+
+    # nixpkgs = import ../nixpkgs.nix;
   };
 
   mkNode = testNetConfig: nodeConfig: rec {
-    config = import ../machines/node/configuration.nix { inherit nodeConfig; inherit testNetConfig; };
+    config = import ../machines/node/configuration.nix {
+      inherit nodeConfig testNetConfig;
+    };
 
-    extraFlags = [
-      "--network-veth"
-    ];
+    # extraFlags = [
+    #   "--network-veth"
+    # ];
     # rebuild container from scratch (more reproducability, but takes longer to start tests)
     # bindMounts = {
     #     "/home/i2p"
@@ -30,16 +34,18 @@ rec {
 
     # hostBridge = "br${builtins.toString nodeConfig.id}";
 
-    # hostAddress = nodeConfig.hostAddress;
-    # localAddress = nodeConfig.localAddress;
+    hostAddress = nodeConfig.hostAddress;
+    localAddress = nodeConfig.localAddress;
+    networkAddress = nodeConfig.networkAddress;
+    networkPrefix = nodeConfig.networkPrefix;
     # hostAddress6 = nodeConfig.hostAddress6;
+    # networkAddress6 = nodeConfig.networkAddress6;
     # localAddress6 = nodeConfig.localAddress6;
     # interfaces = [ nodeConfig.interfaceName ];
   } // commonSettings;
 
   mkReseederNode = testNetConfig: {
       config = import ../machines/seeder/configuration.nix;
-
       # extraVeths = {
       #   "v-host" = {
       #     localAddress = "10.23.0.100/16";
@@ -47,7 +53,10 @@ rec {
       #   };
       # };
       #
-      # localAddress = "10.23.0.100/16";
+      localAddress = "10.23.0.2";
+      hostAddress = "10.23.0.1";
+      networkAddress = "10.23.0.0";
+      networkPrefix = "24";
       # localAddress = "10.0.0.2/8";
       # hostAddress = "10.0.0.1";
       # hostBridge = "br0";

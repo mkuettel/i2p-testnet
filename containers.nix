@@ -31,7 +31,7 @@ in {
       enableIPv6 = false;
 
       firewall = {
-        enable = false;
+        # enable = true;
         allowedTCPPorts = [ 22 ]; # ssh
       };
 
@@ -59,7 +59,7 @@ in {
         internalInterfaces = ["ve-+"];
         externalInterface = "enp0s3"; # TODO: is this garuanteed to be here? only in VMWARE?
       };
-      networkmanager.unmanaged = [ "interface-name:ve-*" ];
+      # networkmanager.unmanaged = [ "interface-name:ve-*" ];
     };
     # networking.bridges."br0" = { rstp = false; interfaces = ["ve-i2p-reseed"]; };
     # networking.nat.enable = true;
