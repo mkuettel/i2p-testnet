@@ -39,28 +39,36 @@ let
         if [ -n "$HOST_ADDRESS" ]   || [ -n "$HOST_ADDRESS6" ]  ||
            [ -n "$LOCAL_ADDRESS" ]  || [ -n "$LOCAL_ADDRESS6" ] ||
            [ -n "$HOST_BRIDGE" ]; then
+          echo "setting up container side"
           ip link set host0 name eth0
+          # ip addr flush dev eth0
           ip link set dev eth0 up
 
+
+          echo "adding container side addresses"
           if [ -n "$LOCAL_ADDRESS" ]; then
-            ip addr add $LOCAL_ADDRESS dev eth0
+            echo "adding container address"
+            ip addr add $LOCAL_ADDRESS/$NETWORK_PREFIX dev eth0
           fi
           if [ -n "$LOCAL_ADDRESS6" ]; then
-            ip -6 addr add $LOCAL_ADDRESS6 dev eth0
+            ip -6 addr add $LOCAL_ADDRESS6/$NETWORK_PREFIX6 dev eth0
           fi
-          if [ -n "$HOST_ADDRESS" ]; then
+
+          if [ -n "$NETWORK_ADDRESS" ]; then
+            echo "adding container route"
             ip route add $HOST_ADDRESS dev eth0
             ip route add default via $HOST_ADDRESS
+            echo "success"
           fi
-          if [ -n "$HOST_ADDRESS6" ]; then
+
+          if [ -n "$NETWORK_ADDRESS6" ]; then
             ip -6 route add $HOST_ADDRESS6 dev eth0
-            ip -6 route add default via $HOST_ADDRESS6
           fi
         fi
 
         ${concatStringsSep "\n" (mapAttrsToList renderExtraVeth cfg.extraVeths)}
 
-        # Start the regular stage 1 script.
+        echo Start the regular stage 1 script.
         exec "$1"
       ''
     );
@@ -141,8 +149,12 @@ let
         ${optionalString (!cfg.ephemeral) "--link-journal=try-guest"} \
         --setenv PRIVATE_NETWORK="$PRIVATE_NETWORK" \
         --setenv HOST_BRIDGE="$HOST_BRIDGE" \
+        --setenv NETWORK_ADDRESS="$NETWORK_ADDRESS" \
+        --setenv NETWORK_PREFIX="$NETWORK_PREFIX" \
         --setenv HOST_ADDRESS="$HOST_ADDRESS" \
         --setenv LOCAL_ADDRESS="$LOCAL_ADDRESS" \
+        --setenv NETWORK_ADDRESS6="$NETWORK_ADDRESS6" \
+        --setenv NETWORK_PREFIX6="$NETWORK_PREFIX6" \
         --setenv HOST_ADDRESS6="$HOST_ADDRESS6" \
         --setenv LOCAL_ADDRESS6="$LOCAL_ADDRESS6" \
         --setenv HOST_PORT="$HOST_PORT" \
@@ -177,11 +189,11 @@ let
 
   postStartScript = (cfg:
     let
-      ipcall = cfg: ipcmd: variable: attribute:
+      ipcall = cfg: ipcmd: variable: attribute: netmask:
         if cfg.${attribute} == null then
           ''
             if [ -n "${variable}" ]; then
-              ${ipcmd} add ${variable} dev $ifaceHost
+              ${ipcmd} add ${variable}${optionalString (netmask != null) "/${netmask}"} dev $ifaceHost
             fi
           ''
         else
@@ -216,12 +228,14 @@ let
            [ -n "$HOST_ADDRESS6" ] || [ -n "$LOCAL_ADDRESS6" ]; then
           if [ -z "$HOST_BRIDGE" ]; then
             ifaceHost=ve-$INSTANCE
+            echo "setting up host side"
+            # ip addr flush $ifaceHost
             ip link set dev $ifaceHost up
 
-            ${ipcall cfg "ip addr" "$HOST_ADDRESS" "hostAddress"}
-            ${ipcall cfg "ip -6 addr" "$HOST_ADDRESS6" "hostAddress6"}
-            ${ipcall cfg "ip route" "$LOCAL_ADDRESS" "localAddress"}
-            ${ipcall cfg "ip -6 route" "$LOCAL_ADDRESS6" "localAddress6"}
+            echo "adding address and route"
+
+            ip addr add $HOST_ADDRESS/$NETWORK_PREFIX dev $ifaceHost
+            # ip route add $LOCAL_ADDRESS dev $ifaceHost
           fi
         fi
         ${concatStringsSep "\n" (mapAttrsToList renderExtraVeth cfg.extraVeths)}
@@ -368,6 +382,43 @@ let
       '';
     };
 
+    networkAddress = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      example = "10.231.136.0/24";
+      description = ''
+        The IPv4 network address including netmask the host and the container interfaces reside in.
+      '';
+    };
+
+    networkAddress6 = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      example = "fc00::/64";
+      description = ''
+        The IPv6 network address including netmask the host and the container interfaces reside in.
+      '';
+    };
+
+    networkPrefix = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      example = "24";
+      description = ''
+        The IPv4 network prefix
+      '';
+    };
+
+
+    networkPrefix6 = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      example = "64";
+      description = ''
+        The IPv6 network prefix
+      '';
+    };
+
 
     hostAddress = mkOption {
       type = types.nullOr types.str;
@@ -422,6 +473,10 @@ let
       ephemeral = false;
       timeoutStartSec = "15s";
       allowedDevices = [];
+      networkAddress = null;
+      networkAddress6 = null;
+      networkPrefix = null;
+      networkPrefix6 = null;
       hostAddress = null;
       hostAddress6 = null;
       localAddress = null;
@@ -815,6 +870,18 @@ in
               ''}
               ${optionalString (length cfg.forwardPorts > 0) ''
                 HOST_PORT=${concatStringsSep "," (map mkPortStr cfg.forwardPorts)}
+              ''}
+              ${optionalString (cfg.networkAddress != null) ''
+                NETWORK_ADDRESS=${cfg.networkAddress}
+              ''}
+              ${optionalString (cfg.networkAddress6 != null) ''
+                NETWORK_ADDRESS6=${cfg.networkAddress6}
+              ''}
+              ${optionalString (cfg.networkPrefix != null) ''
+                NETWORK_PREFIX=${cfg.networkPrefix}
+              ''}
+              ${optionalString (cfg.networkPrefix6 != null) ''
+                NETWORK_PREFIX6=${cfg.networkPrefix6}
               ''}
               ${optionalString (cfg.hostAddress != null) ''
                 HOST_ADDRESS=${cfg.hostAddress}
