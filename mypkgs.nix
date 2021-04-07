@@ -5,6 +5,10 @@
   # TODO: pin this?
   # nix.nixPath = [ "nixpkgs=https://github.com/NixOS/nixpkgs/archive/29363442f5e6b14d3f2fdfd5f13605a47bd02301.tar.gz" ];
 
+  # replace the nixos containers module with my own version to fix networking
+  disabledModules = [ "virtualisation/nixos-containers.nix" ];
+  imports = [ ./modules/nixos-containers.nix ];
+
   nixpkgs.overlays = [
     (self: super: rec {
       i2pd = super.callPackage ./pkgs/i2pd { };
