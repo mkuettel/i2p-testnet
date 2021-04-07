@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+network_name="network.i2pd.local"
+
+if docker network list | grep -F "$network_name"; then
+    echo "Removing network $network_name as it already exists."
+    docker network rm "$network_name"
+fi
+
+
+docker-compose -f docker/i2p-testnet.yml up \
+    --build \
+    --remove-orphans \
+    --force-recreate \
+    --scale i2pd=10
