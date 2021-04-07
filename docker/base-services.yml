@@ -4,10 +4,11 @@ services:
     restart: unless-stopped
     environment:
       ENABLE_TUNNELS: 1
-    ports:
-      - 7070:7070
-      - 4444:4444
-      - 4445:4445
+    # This only works when the network is private
+    # ports:
+    #   - 7070:7070
+    #   - 4444:4444
+    #   - 4445:4445
 
   reseed:
     image: divax/i2p-reseed

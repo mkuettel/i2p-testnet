@@ -17,9 +17,16 @@ if docker network list | grep -F "$NETWORK_NAME"; then
     docker network rm "$NETWORK_NAME"
 fi
 
+OVERRIDES=()
+
+if [[ "$(getconf network.private)" != "true" ]]; then
+    OVERRIDES+=("-f" "$base_dir/docker/publicnet.override.yml")
+fi
+
 export NETWORK_NAME
-docker-compose -f "$base_dir"/docker/i2p-testnet.yml up \
-    --build \
+docker-compose -f "$base_dir"/docker/i2p-testnet.yml \
+    "${OVERRIDES[@]}" \
+    up --build \
     --remove-orphans \
     --force-recreate \
     --scale i2pd="$(getconf 'nodes.amount')"
