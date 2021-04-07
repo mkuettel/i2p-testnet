@@ -1,0 +1,8 @@
+{
+    "network": {
+        "private": true
+    },
+    "nodes": {
+        "amount": 10
+    }
+}
