@@ -2,11 +2,11 @@
 
 set -eu -o pipefail
 
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+base_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 getconf() {
     local attr="$1"
-    jq ".$attr" < "$script_dir/../config.json"
+    jq ".$attr" < "$base_dir/config.json"
 }
 
 
@@ -18,7 +18,7 @@ if docker network list | grep -F "$NETWORK_NAME"; then
 fi
 
 export NETWORK_NAME
-docker-compose -f docker/i2p-testnet.yml up \
+docker-compose -f "$base_dir"/docker/i2p-testnet.yml up \
     --build \
     --remove-orphans \
     --force-recreate \
