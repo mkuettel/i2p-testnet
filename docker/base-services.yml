@@ -12,9 +12,8 @@ services:
     #   - 4445:4445
 
   reseed:
-    image: divax/i2p-reseed
-    ports:
-      - 8443
+    # TODO: pin this for reproducability
+    image: mkuettel/i2p-reseed:latest
     environment:
       - SIGNER=mkuettel@mail.i2p
 
