@@ -28,6 +28,10 @@ services:
       - n1.i2pd.local:/home/i2pd/
     networks:
       - i2ptestnet
+  selftest:
+    extends:
+      file: base-services.yml
+      service: selftest
 
 networks:
   i2ptestnet:

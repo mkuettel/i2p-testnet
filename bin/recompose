@@ -32,7 +32,7 @@ while getopts "h?t" opt; do
         display_help
         exit 1
         ;;
-    t)  verbose=1
+    t)  test=1
         ;;
     # f)  output_file=$OPTARG
     #     ;;
@@ -52,17 +52,21 @@ if docker network list | grep -F "$NETWORK_NAME"; then
     docker network rm "$NETWORK_NAME"
 fi
 
-OVERRIDES=()
+COMPOSE_ARGS=()
 
 if [[ "$(getconf network.private)" != "true" ]]; then
-    OVERRIDES+=("-f" "$base_dir/docker/publicnet.override.yml")
+    COMPOSE_ARGS+=("-f" "$base_dir/docker/publicnet.override.yml")
 else
-    OVERRIDES+=("-f" "$base_dir/docker/privatenet.override.yml")
+    COMPOSE_ARGS+=("-f" "$base_dir/docker/privatenet.override.yml")
+fi
+
+if [ "$test" -eq 1 ]; then
+    COMPOSE_ARGS+=("--profile test")
 fi
 
 export NETWORK_NAME
 docker-compose -f "$base_dir"/docker/i2p-testnet.yml \
-    "${OVERRIDES[@]}" \
+    "${COMPOSE_ARGS[@]}" \
     up --build \
     --remove-orphans \
     --force-recreate \
