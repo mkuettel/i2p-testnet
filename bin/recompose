@@ -1,16 +1,48 @@
 #!/usr/bin/env bash
 
 set -eu -o pipefail
-
 base_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 getconf() {
     local attr="$1"
-    jq ".$attr" < "$base_dir/config.json" || (
+    jq ".$attr" < "$config_file" || (
         echo "ERROR: could not read configuration file" 1>&2
         exit 4
     )
 }
+
+display_help() {
+    echo "Usage: recompose [-h] [-t] [config-file]"
+    echo ""
+    echo "  -h              Show this help screen"
+    echo "  -t              Start the testnet with profile testing"
+    echo "  config-file     The JSON configuration file to use to"
+    echo "                  configure the testnet"
+    echo "                  Default: config.json"
+}
+
+
+# Variables for command line arguments
+test=0
+
+OPTIND=1
+while getopts "h?t" opt; do
+    case "$opt" in
+    h|\?)
+        display_help
+        exit 1
+        ;;
+    t)  verbose=1
+        ;;
+    # f)  output_file=$OPTARG
+    #     ;;
+    esac
+done
+
+shift $((OPTIND-1))
+
+[ "${1:-}" = "--" ] && shift
+config_file="${1:-"$base_dir/config.json"}"
 
 
 NETWORK_NAME="$(getconf network.name)"
