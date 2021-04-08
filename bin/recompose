@@ -77,7 +77,7 @@ else
 fi
 
 if [ "$test" -eq 1 ]; then
-    COMPOSE_ARGS+=("--profile test")
+    export COMPOSE_PROFILES=test
 fi
 
 export COMPOSE_PROJECT_NAME=testnet
