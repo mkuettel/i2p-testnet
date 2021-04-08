@@ -21,6 +21,22 @@ display_help() {
     echo "                  Default: config.json"
 }
 
+num_router_infos() {
+    printf "%s\n" ris/routerInfo*.dat | wc -l
+}
+
+collect_router_infos() {
+    local amount="$(getconf 'nodes.amount')"
+
+    [ ! -d ris ] && mkdir ris
+
+    while [ "$(num_router_infos)" -lt "$amount" ]; do
+        for i in $(seq 1 "$amount"); do
+            docker cp "${COMPOSE_PROJECT_NAME}_i2pd_$i":/home/i2pd/data/router.info ris/routerInfo-$i.dat || true
+        done
+    done
+}
+
 
 # Variables for command line arguments
 test=0
@@ -64,7 +80,13 @@ if [ "$test" -eq 1 ]; then
     COMPOSE_ARGS+=("--profile test")
 fi
 
+export COMPOSE_PROJECT_NAME=testnet
 export NETWORK_NAME
+
+if [[ "$(getconf network.private)" != "true" ]]; then
+    collect_router_infos &
+fi
+
 docker-compose "${COMPOSE_ARGS[@]}" \
     up --build \
     --remove-orphans \
