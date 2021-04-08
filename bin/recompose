@@ -6,7 +6,10 @@ base_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 getconf() {
     local attr="$1"
-    jq ".$attr" < "$base_dir/config.json"
+    jq ".$attr" < "$base_dir/config.json" || (
+        echo "ERROR: could not read configuration file" 1>&2
+        exit 4
+    )
 }
 
 
