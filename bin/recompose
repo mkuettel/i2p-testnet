@@ -52,7 +52,7 @@ if docker network list | grep -F "$NETWORK_NAME"; then
     docker network rm "$NETWORK_NAME"
 fi
 
-COMPOSE_ARGS=()
+COMPOSE_ARGS=("-f" "$base_dir"/docker/i2p-testnet.yml)
 
 if [[ "$(getconf network.private)" != "true" ]]; then
     COMPOSE_ARGS+=("-f" "$base_dir/docker/publicnet.override.yml")
@@ -65,9 +65,11 @@ if [ "$test" -eq 1 ]; then
 fi
 
 export NETWORK_NAME
-docker-compose -f "$base_dir"/docker/i2p-testnet.yml \
-    "${COMPOSE_ARGS[@]}" \
+docker-compose "${COMPOSE_ARGS[@]}" \
     up --build \
     --remove-orphans \
     --force-recreate \
-    --scale i2pd="$(getconf 'nodes.amount')"
+    --scale i2pd="$(getconf 'nodes.amount')" || true
+
+read -p "press enter to stop the testnet...." garbage
+docker-compose "${COMPOSE_ARGS[@]}" down
