@@ -2,7 +2,7 @@ services:
   reseed:
     extends:
       file: base-services.yml
-      service: i2pd
+      service: reseed
     ports:
       - 8443
     networks:
