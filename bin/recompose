@@ -2,6 +2,7 @@
 
 set -eu -o pipefail
 base_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+reseed_netdb_dir="${base_dir}/reseed-netDb"
 
 getconf() {
     local attr="$1"
@@ -22,19 +23,20 @@ display_help() {
 }
 
 num_router_infos() {
-    printf "%s\n" ris/routerInfo*.dat | wc -l
+    printf "%s\n" "$reseed_netdb_dir"/routerInfo*.dat | wc -l
 }
 
 collect_router_infos() {
     local amount="$(getconf 'nodes.amount')"
 
-    [ ! -d ris ] && mkdir ris
-
+    # copy until we have a router info from every node
     while [ "$(num_router_infos)" -lt "$amount" ]; do
         for i in $(seq 1 "$amount"); do
-            docker cp "${COMPOSE_PROJECT_NAME}_i2pd_$i":/home/i2pd/data/router.info ris/routerInfo-$i.dat || true
+            docker cp "${COMPOSE_PROJECT_NAME}_i2pd_$i":/home/i2pd/data/router.info "$reseed_netdb_dir"/routerInfo-"$i".dat || true
         done
     done
+
+    touch "$reseed_netdb_dir"/.router-infos-collected
 }
 
 
@@ -83,7 +85,11 @@ fi
 export COMPOSE_PROJECT_NAME=testnet
 export NETWORK_NAME
 
-if [[ "$(getconf network.private)" != "true" ]]; then
+if [[ "$(getconf network.private)" == "true" ]]; then
+    # delete remains of previous run
+    rm "$reseed_netdb_dir"/.router-infos-collected || true
+    rm "$reseed_netdb_dir"/routerInfo-*.dat || true
+
     collect_router_infos &
 fi
 

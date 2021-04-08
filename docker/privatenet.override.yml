@@ -5,6 +5,11 @@ services:
       service: reseed
     ports:
       - 8443
+    volumes:
+      # RELATIVE to the docker-compose file!
+      - ../reseed-netDb:/home/i2preseed/netDb
+    environment:
+      - WAIT_ROUTER_INFOS_COLLECTED=1
     networks:
       i2ptestnet:
         ipv4_address: 10.23.0.1
