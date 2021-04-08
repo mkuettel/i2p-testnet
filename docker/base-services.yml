@@ -14,6 +14,8 @@ services:
     image: divax/i2p-reseed
     ports:
       - 8443
+    environment:
+      - SIGNER=mkuettel@mail.i2p
 
   selftest:
     image: ubuntu:20.10
