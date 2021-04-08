@@ -32,6 +32,11 @@ services:
     extends:
       file: base-services.yml
       service: selftest
+    profiles:
+      - test
+    networks:
+      i2ptestnet:
+        ipv4_address: 10.23.0.2
 
 networks:
   i2ptestnet:
@@ -41,6 +46,7 @@ networks:
       driver: default
       config:
         - subnet: 10.23.0.0/16
+          ip_range: 10.23.128.0/17
 
 volumes:
   n1.i2pd.local:
