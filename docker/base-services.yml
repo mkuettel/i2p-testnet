@@ -1,6 +1,7 @@
 services:
   i2pd:
-    image: divax/i2p:latest
+    build:
+      context: ./i2p
     restart: unless-stopped
     environment:
       ENABLE_TUNNELS: 1
