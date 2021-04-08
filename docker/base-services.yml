@@ -16,4 +16,4 @@ services:
       - 8443
 
   selftest:
-    image: ubuntu:20.08
+    image: ubuntu:20.10
