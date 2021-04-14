@@ -4,6 +4,16 @@
         "private": true
     },
     "nodes": {
-        "amount": 11
+        "amount": 103,
+        "tunnels": {
+            "inbound": {
+                "quantity": 3,
+                "length": 3
+            },
+            "inbound": {
+                "quantity": 3,
+                "length": 3
+            }
+        }
     }
 }
