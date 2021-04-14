@@ -4,11 +4,11 @@ services:
       - RESEED_WAIT_URL=http://10.23.0.1:8443/i2pseeds.su3
   reseed:
     extends:
-      file: base-services.yml
+      file: docker/base-services.yml
       service: reseed
     volumes:
       # RELATIVE to the docker-compose file!
-      - ./volumes/reseed-netDb:/home/i2preseed/netDb
+      - ./docker/volumes/reseed-netDb:/home/i2preseed/netDb
     environment:
       - WAIT_ROUTER_INFOS_COLLECTED=1
     networks:
