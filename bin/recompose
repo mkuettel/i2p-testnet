@@ -2,7 +2,7 @@
 
 set -eu -o pipefail
 base_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-reseed_netdb_dir="${base_dir}/reseed-netDb"
+reseed_netdb_dir="${base_dir}/docker/volumes/reseed-netDb"
 
 getconf() {
     local attr="$1"
@@ -70,7 +70,7 @@ if docker network list | grep -F "$NETWORK_NAME"; then
     docker network rm "$NETWORK_NAME"
 fi
 
-COMPOSE_ARGS=("-f" "$base_dir"/docker/i2p-testnet.yml)
+COMPOSE_ARGS=("-f" "$base_dir"/docker-compose.yml)
 
 if [[ "$(getconf network.private)" != "true" ]]; then
     COMPOSE_ARGS+=("-f" "$base_dir/docker/publicnet.override.yml")

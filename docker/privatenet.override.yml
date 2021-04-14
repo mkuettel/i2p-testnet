@@ -8,7 +8,7 @@ services:
       service: reseed
     volumes:
       # RELATIVE to the docker-compose file!
-      - ../reseed-netDb:/home/i2preseed/netDb
+      - ./volumes/reseed-netDb:/home/i2preseed/netDb
     environment:
       - WAIT_ROUTER_INFOS_COLLECTED=1
     networks:
