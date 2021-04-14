@@ -16,6 +16,9 @@ services:
     image: mkuettel/i2p-reseed:latest
     environment:
       - SIGNER=mkuettel@mail.i2p
+    ports:
+      - 8443
+
 
   selftest:
     image: ubuntu:20.10

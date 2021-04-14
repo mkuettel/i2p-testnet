@@ -6,8 +6,6 @@ services:
     extends:
       file: base-services.yml
       service: reseed
-    ports:
-      - 8443
     volumes:
       # RELATIVE to the docker-compose file!
       - ../reseed-netDb:/home/i2preseed/netDb
