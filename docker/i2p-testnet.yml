@@ -24,8 +24,8 @@ services:
     extends:
       file: base-services.yml
       service: i2pd
-    volumes:
-      - n1.i2pd.local:/home/i2pd/
+    # volumes:
+    #   - n1.i2pd.local:/home/i2pd/
     networks:
       - i2ptestnet
   selftest:
