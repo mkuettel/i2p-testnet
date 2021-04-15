@@ -1,7 +1,18 @@
+version: "3.8"
 services:
   i2pd:
     environment:
       - RESEED_WAIT_URL=http://10.23.0.1:8443/i2pseeds.su3
+    ports:
+      - 7070:7070
+      - 4445:4445
+  reseed:
+    # TODO: pin this for reproducability
+    image: mkuettel/i2p-reseed:latest
+    environment:
+      - SIGNER=mkuettel@mail.i2p
+    ports:
+      - 8443
   reseed:
     extends:
       file: docker/base-services.yml

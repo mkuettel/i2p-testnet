@@ -21,17 +21,17 @@
 version: "3.8"
 services:
   i2pd:
-    extends:
-      file: docker/base-services.yml
-      service: i2pd
+    build:
+      context: ./docker/i2p
+    restart: unless-stopped
+    environment:
+      ENABLE_TUNNELS: 1
     # volumes:
     #   - n1.i2pd.local:/home/i2pd/
     networks:
       - i2ptestnet
   selftest:
-    extends:
-      file: docker/base-services.yml
-      service: selftest
+    image: ubuntu:20.10
     profiles:
       - test
     networks:
