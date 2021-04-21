@@ -1,0 +1,13 @@
+{
+    "build": {
+        "context": "./docker/i2p"
+    },
+    "environment": [
+        "ENABLE_TUNNELS=1"
+    ],
+    "networks": {
+        "i2ptestnet": {
+            "ipv4_address": "0.0.0.0"
+        }
+    }
+}
