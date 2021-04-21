@@ -1,10 +1,9 @@
 FROM mkuettel/i2p:latest
 #TODO: pin this for reproducability
 
-RUN apk add curl netcat-openbsd
+RUN apk add curl netcat-openbsd python3
 
-RUN sed -i 's|^# urls = https.*$|urls = http://10.23.0.1:8443/|g' conf/i2pd.org.conf
-RUN sed -i 's|^verify = true.*$|verify = false|g' conf/i2pd.org.conf
-RUN grep -F http://10.23.0.1 conf/i2pd.org.conf
+ADD ./conf/i2pd.org.conf /home/i2pd/conf/i2pd.org.conf
+ADD ./tunnels.conf.d/tcp-in.conf /home/i2pd/tunnels.source.conf.d/tcp-in.conf
 
 
