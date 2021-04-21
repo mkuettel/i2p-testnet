@@ -1,6 +1,6 @@
 let
-  commitRev = "29363442f5e6b14d3f2fdfd5f13605a47bd02301"; # 18.03 on 2020-01-22
+  commitRev = "59763ff16abbcc2e13a8fb04f4e4cd33f40db843"; # 20.09 on 2021-04-14
 in builtins.fetchTarball {
   url = "https://github.com/NixOS/nixpkgs/archive/${commitRev}.tar.gz";
-  sha256 = "1dfk3q1q2w53k3zl9biijgpr1zvj5xr673p15a7rh1d11sadrxjh";
+  sha256 = "1as7bhs2d31rws0s6b6rfw30kyvh7klfqfgf0r3jkhfj312qaqlr";
 }
