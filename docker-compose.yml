@@ -30,16 +30,29 @@ services:
     #   - n1.i2pd.local:/home/i2pd/
     networks:
       - i2ptestnet
+    # network_mode: 'service:i2pd'
 
 networks:
   i2ptestnet:
     name: "${NETWORK_NAME}"
+    driver: bridge
     internal: true
+    driver_opts:
+      com.docker.network.bridge.enable_icc: "true"
+      com.docker.network.bridge.enable_ip_masquerade: "true"
+      # com.docker.network.bridge.host_binding_ipv4: "0.0.0.0"
+      # com.docker.network.bridge.name: "br14"
+      # com.docker.network.driver.mtu: "1500"
+      # com.docker.network.bridge.enable_ip_masquerade: "true"
     ipam:
       driver: default
       config:
         - subnet: 10.23.0.0/16
           ip_range: 10.23.128.0/17
+          gateway: 10.23.127.254
+          # aux_addresses:
+          #   reseed: 10.23.0.1
+            # gateway: 10.23.0.2
 
 volumes:
   n1.i2pd.local:
