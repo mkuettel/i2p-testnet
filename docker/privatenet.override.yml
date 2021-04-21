@@ -9,18 +9,13 @@ services:
   reseed:
     # TODO: pin this for reproducability
     image: mkuettel/i2p-reseed:latest
-    environment:
-      - SIGNER=mkuettel@mail.i2p
     ports:
       - 8443
-  reseed:
-    extends:
-      file: docker/base-services.yml
-      service: reseed
     volumes:
       # RELATIVE to the docker-compose file!
       - ./docker/volumes/reseed-netDb:/home/i2preseed/netDb
     environment:
+      - SIGNER=mkuettel@mail.i2p
       - WAIT_ROUTER_INFOS_COLLECTED=1
     networks:
       i2ptestnet:
