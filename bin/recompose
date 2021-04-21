@@ -26,7 +26,7 @@ while getopts "h?t" opt; do
     case "$opt" in
     h|\?)
         display_help
-        exit 1
+        exit 0
         ;;
     t)  test=1
         ;;
