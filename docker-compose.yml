@@ -30,14 +30,6 @@ services:
     #   - n1.i2pd.local:/home/i2pd/
     networks:
       - i2ptestnet
-  selftest:
-    image: ubuntu:20.10
-    profiles:
-      - test
-    networks:
-      i2ptestnet:
-        ipv4_address: 10.23.0.2
-    command: ["sleep", "100s"]
 
 networks:
   i2ptestnet:
