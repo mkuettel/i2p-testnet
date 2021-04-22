@@ -18,7 +18,7 @@
 # Author/Maintainer: Moritz Küttel <moritz.kuettel@gmail.com>
 #
 
-version: "2.4"
+version: "3.8"
 services:
   i2pd:
     build:
@@ -48,11 +48,6 @@ networks:
       driver: default
       config:
         - subnet: 10.23.0.0/16
-          ip_range: 10.23.128.0/17
-          gateway: 10.23.127.254
-          # aux_addresses:
-          #   reseed: 10.23.0.1
-            # gateway: 10.23.0.2
 
 volumes:
   n1.i2pd.local:
