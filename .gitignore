@@ -1,2 +1,3 @@
 docker/volumes/
 keys/
+docker/nodes.generated.override.yml
