@@ -31,3 +31,39 @@ collect_router_infos() {
 
     touch "$reseed_netdb_dir"/.router-infos-collected
 }
+
+generate_node_config() {
+    local id="$1"
+    local segment3=$((id / 256 + 128))
+    local segment4=$((id % 256))
+
+    local ipv4_address="10.23.${segment3}.${segment4}"
+
+    local nodefile="$(mktemp)"
+
+    jq  --arg ipv4_address "$ipv4_address" \
+        '.networks["i2ptestnet"]["ipv4_address"] = $ipv4_address' \
+        < "$base_dir"/docker/i2p-node-base.json \
+        > "$nodefile"
+
+    if [[ "$(getconf network.private)" == "true" ]]; then
+        jq  --arg reseed_wait_url "http://10.23.0.1:8443/i2pseeds.su3" \
+            '.environment["RESEED_WAIT_URL"] = $reseed_wait_url' \
+            < "$nodefile" \
+            | sponge "$nodefile"
+    fi
+
+    jq --arg i $1 '{("i2pd_" + $i): .}' < "$nodefile"
+    rm "$nodefile"
+}
+
+generate_all_node_configs() {
+    local amount="$1"
+
+    (
+        for i in $(seq 1 "$amount"); do
+            generate_node_config "$i"
+        done
+    )   | jq -s 'add' \
+        | jq '{"version": "3.8", "services": .}'
+}
