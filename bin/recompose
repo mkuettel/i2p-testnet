@@ -51,8 +51,13 @@ fi
 COMPOSE_ARGS=("-f" "$base_dir"/docker-compose.yml)
 
 if [[ "$(getconf network.private)" != "true" ]]; then
+    echo "Using public network configuration"
     COMPOSE_ARGS+=("-f" "$base_dir/docker/publicnet.override.yml")
 else
+    echo "Using private network configuration"
+    export NUM_ROUTER_INFOS="$(getconf 'reseeder.router_infos_per_node')"
+    export NUM_SU3_FILES="$(getconf 'reseeder.num_different_seed_files')"
+
     COMPOSE_ARGS+=("-f" "$base_dir/docker/privatenet.override.yml")
 fi
 

@@ -3,14 +3,14 @@ services:
   reseed:
     # TODO: pin this for reproducability
     image: mkuettel/i2p-reseed:latest
-    ports:
-      - 8443
     volumes:
       # RELATIVE to the docker-compose file!
       - ./docker/volumes/reseed-netDb:/home/i2preseed/netDb
     environment:
       - SIGNER=mkuettel@mail.i2p
       - WAIT_ROUTER_INFOS_COLLECTED=1
+      - NUM_ROUTER_INFOS=$NUM_ROUTER_INFOS"
+      - NUM_SU3_FILES=$NUM_SU3_FILES"
     networks:
       i2ptestnet:
         ipv4_address: 10.23.0.1
