@@ -9,16 +9,21 @@ load test-helper
     docker exec testnet_i2pd_1 ping -c1 10.23.0.2
 }
 
-
 @test "reseeder can ping i2pd" {
     docker exec testnet_reseed ping -c1 10.23.128.1
+}
+
+@test "i2pd node cannot ping internet" {
+    run docker exec testnet_i2pd_2 ping -c1 8.8.8.8
+
+    [ "$status" -eq 1 ] 
+    grep '100% packet loss' <<<"$output"
 }
 
 @test "i2pd can ping other i2pd" {
     docker exec testnet_i2pd_1 ping -c1 10.23.128.2
     docker exec testnet_i2pd_2 ping -c1 10.23.128.1
 }
-
 
 @test "reseeder serves a seed file" {
     docker exec testnet_reseed sh \
