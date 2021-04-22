@@ -87,11 +87,7 @@ docker-compose "${COMPOSE_ARGS[@]}" \
     up --build \
     --remove-orphans \
     --force-recreate \
-    --always-recreate-deps \
-    --scale "i2pd=$(getconf 'nodes.amount')"
-
-if [ "$?" -ne 0 ]; then
-    read -p "It seems something went wrong. Press enter to stop the testnet...." garbage
-fi
+    --always-recreate-deps || \
+    read -rp "It seems something went wrong. Press enter to stop the testnet...." _
 
 docker-compose "${COMPOSE_ARGS[@]}" down
