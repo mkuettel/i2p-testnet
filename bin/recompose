@@ -57,6 +57,7 @@ else
     echo "Using private network configuration"
     export NUM_ROUTER_INFOS="$(getconf 'reseeder.router_infos_per_node')"
     export NUM_SU3_FILES="$(getconf 'reseeder.num_different_seed_files')"
+    export RESEED_IP=10.23.0.2
 
     COMPOSE_ARGS+=("-f" "$base_dir/docker/privatenet.override.yml")
 fi

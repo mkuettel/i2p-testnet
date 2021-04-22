@@ -13,4 +13,4 @@ services:
       - NUM_SU3_FILES=$NUM_SU3_FILES"
     networks:
       i2ptestnet:
-        ipv4_address: 10.23.0.1
+        ipv4_address: $RESEED_IP

@@ -51,7 +51,7 @@ generate_node_config() {
         > "$nodefile"
 
     if [[ "$(getconf network.private)" == "true" ]]; then
-        jq  --arg reseed_wait_url "http://10.23.0.1:8443/i2pseeds.su3" \
+        jq  --arg reseed_wait_url "http://$RESEED_IP:8443/i2pseeds.su3" \
             '.environment["RESEED_WAIT_URL"] = $reseed_wait_url' \
             < "$nodefile" \
             | sponge "$nodefile"
