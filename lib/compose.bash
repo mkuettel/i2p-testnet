@@ -13,16 +13,20 @@ num_router_infos() {
 
 collect_router_infos() {
     local amount="$(getconf 'nodes.amount')"
+    local num_errs=0
 
     # copy until we have a router info from every node
-    while [[ "$(num_router_infos)" -lt "$amount" ]]; do
+    while [[ "$(num_router_infos)" -lt "$amount" && "$num_errs" -lt $((amount * 10)) ]]; do
         for i in $(seq 1 "$amount"); do
             if [[ ! -f "$reseed_netdb_dir"/routerInfo-"$i".dat ]]; then
-                docker cp "${COMPOSE_PROJECT_NAME}_i2pd_$i":/home/i2pd/data/router.info "$reseed_netdb_dir"/routerInfo-"$i".dat || true
-
-                ## delete if file is empty to refetch it again if necesscary
-                if [[ -f "$reseed_netdb_dir"/routerInfo-"$i".dat && ( ! -s "$reseed_netdb_dir"/routerInfo-"$i".dat ) ]]; then
-                    rm "$reseed_netdb_dir"/routerInfo-"$i".dat || true
+                if docker cp "${COMPOSE_PROJECT_NAME}_i2pd_$i":/home/i2pd/data/router.info "$reseed_netdb_dir"/routerInfo-"$i".dat; then
+                    num_errs=0
+                    ## delete if file is empty to refetch it again if necesscary
+                    if [[ -f "$reseed_netdb_dir"/routerInfo-"$i".dat && ( ! -s "$reseed_netdb_dir"/routerInfo-"$i".dat ) ]]; then
+                        rm "$reseed_netdb_dir"/routerInfo-"$i".dat || true
+                    fi
+                else
+                    num_errs=$((num_errs + 1))
                 fi
             fi
             # docker cp "${COMPOSE_PROJECT_NAME}_i2pd_$i":/home/i2pd/data/destinations "$addressbook_dir" || true
