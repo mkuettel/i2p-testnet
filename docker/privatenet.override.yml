@@ -1,12 +1,5 @@
 version: "2.4"
 services:
-  i2pd:
-    environment:
-      - RESEED_WAIT_URL=http://10.23.0.1:8443/i2pseeds.su3
-    # ports:
-      # from the I2Pd source:
-      # RouterContext.cpp: port = rand () % (30777 - 9111) + 9111; // I2P network ports range
-      # - "9111-30777:9111-30777"
   reseed:
     # TODO: pin this for reproducability
     image: mkuettel/i2p-reseed:latest
