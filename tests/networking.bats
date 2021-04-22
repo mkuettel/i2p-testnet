@@ -29,7 +29,15 @@ load test-helper
     docker exec testnet_i2pd_1 curl -kf https://10.23.0.2:8443/i2pseeds.su3
 }
 
+@test "i2p node socks proxy is running" {
+    docker exec testnet_i2pd_2 netstat -tlpn | grep '127.0.0.1:4445'
+}
 
-# @test "i2pd socks proxy is up" {
-#
-# }
+@test "i2p node can access other i2p nodes server tunnel" {
+    destination=$(docker exec testnet_i2pd_1 ls /home/i2pd/data/destinations | sed 's/\.dat/.b32.i2p/g')
+
+    docker exec -d testnet_i2pd_1 sh -c 'echo "hello from server" | nc -w 1 -l -p 2323 127.0.0.1'
+    docker exec testnet_i2pd_2 curl -sS -x socks5h://127.0.0.1:4445 "telnet://$destination:2323" --data "hi" > msg
+
+    [ "$(cat msg)" = "hello from server" ]
+}
