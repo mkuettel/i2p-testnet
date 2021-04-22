@@ -19,19 +19,6 @@
 #
 
 version: "3.8"
-services:
-  i2pd:
-    build:
-      context: ./docker/i2p
-    restart: unless-stopped
-    environment:
-      ENABLE_TUNNELS: 1
-    # volumes:
-    #   - n1.i2pd.local:/home/i2pd/
-    networks:
-      - i2ptestnet
-    # network_mode: 'service:i2pd'
-
 networks:
   i2ptestnet:
     name: "${NETWORK_NAME}"
