@@ -1,8 +1,7 @@
 #!/usr/bin/env bats
 
 set -eu -o pipefail
-base_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-load ../lib/compose.bash
+load ../lib/compose
 
 load test-helper
 
@@ -20,7 +19,6 @@ teardown() {
     config_file=config.json
 
     container_name="$(generate_node_config 10 | jq -r ".i2pd_10.container_name")"
-    echo "$container_name"
 
     [ "$container_name" = "\${COMPOSE_PROJECT_NAME}_i2pd_10" ]
 }
@@ -38,9 +36,11 @@ teardown() {
 @test "generate_node_config sets reseeder in private network" {
     echo '{"network": {"private": true}}' > config.json
     config_file=config.json
+    RESEED_IP=10.23.0.10
 
     url=$(generate_node_config 11 | jq -r '.i2pd_11.environment.RESEED_WAIT_URL')
-    [ "$url" = "http://10.23.0.1:8443/i2pseeds.su3" ]
+    echo "$url"
+    [ "$url" = "http://$RESEED_IP:8443/i2pseeds.su3" ]
 }
 
 @test "generate_node_config doesn't set reseeder in public network" {
@@ -52,7 +52,7 @@ teardown() {
 }
 
 @test "generate_all_node_configs generates right amount of nodes" {
-    echo '{"network": {"private": true}, "nodes": {"amount": 6}}' > config.json
+    echo '{"network": {"private": false}, "nodes": {"amount": 6}}' > config.json
     config_file=config.json
 
     diff <(seq -f 'i2pd_%g' 1 6) <(generate_all_node_configs 6 | jq -r '.services | keys | .[]')
