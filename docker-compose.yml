@@ -21,7 +21,7 @@
 version: "3.8"
 networks:
   i2ptestnet:
-    name: "${NETWORK_NAME}"
+    name: $NETWORK_NAME
     driver: bridge
     internal: true
     driver_opts:
