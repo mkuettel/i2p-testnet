@@ -3,8 +3,12 @@
         "name":"network.i2pd.local",
         "private": true
     },
+    "reseeder": {
+        "router_infos_per_node": 10,
+        "num_different_seed_files": 10
+    },
     "nodes": {
-        "amount": 103,
+        "amount": 20,
         "tunnels": {
             "inbound": {
                 "quantity": 3,
