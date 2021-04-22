@@ -3,6 +3,7 @@ services:
   reseed:
     # TODO: pin this for reproducability
     image: mkuettel/i2p-reseed:latest
+    container_name: "${COMPOSE_PROJECT_NAME}_reseed"
     volumes:
       # RELATIVE to the docker-compose file!
       - ./docker/volumes/reseed-netDb:/home/i2preseed/netDb

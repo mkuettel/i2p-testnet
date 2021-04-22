@@ -2,6 +2,7 @@
     "build": {
         "context": "./docker/i2p"
     },
+    "container_name": "",
     "environment": {
         "ENABLE_TUNNELS": 1
     },

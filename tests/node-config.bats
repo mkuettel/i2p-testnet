@@ -15,6 +15,16 @@ teardown() {
     true
 }
 
+@test "generate_node_config sets correct container_name" {
+    echo '{"network": {"private": false}}' > config.json
+    config_file=config.json
+
+    container_name="$(generate_node_config 10 | jq -r ".i2pd_10.container_name")"
+    echo "$container_name"
+
+    [ "$container_name" = "\${COMPOSE_PROJECT_NAME}_i2pd_10" ]
+}
+
 @test "generate_node_config sets correct ip" {
     echo '{"network": {"private": false}}' > config.json
     config_file=config.json
