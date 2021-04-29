@@ -1,9 +1,5 @@
-// Taken from https://github.com/eliben/code-for-blog/blob/master/2017/async-socket-server/epoll-server.c
-// Asynchronous socket server - accepting multiple clients concurrently,
-// multiplexing the connections with epoll.
-//
-// Eli Bendersky [http://eli.thegreenplace.net]
-// This code is in the public domain.
+// Based-Off https://github.com/eliben/code-for-blog/blob/master/2017/async-socket-server/epoll-server.c
+// Which is written by Eli Bendersky [http://eli.thegreenplace.net] and was released into the public domain.
 #include <assert.h>
 #include <errno.h>
 #include <stdbool.h>
@@ -64,8 +60,8 @@ fd_status_t on_peer_connected(int sockfd, const struct sockaddr_in* peer_addr,
   peer_state_t* peerstate = &global_state[sockfd];
   peerstate->state = WAIT_FOR_MSG;
   /* peerstate->sendbuf[0] = '*'; */
-  /* peerstate->sendptr = 0; */
-  /* peerstate->sendbuf_end = 1; */
+  peerstate->sendptr = 0;
+  peerstate->sendbuf_end = 0;
 
   // Signal that this socket is ready for reading now.
   return fd_status_R;
@@ -161,7 +157,7 @@ fd_status_t on_peer_ready_send(int sockfd) {
 int main(int argc, const char** argv) {
   setvbuf(stdout, NULL, _IONBF, 0);
 
-  int portnum = 9090;
+  int portnum = 2323;
   if (argc >= 2) {
     portnum = atoi(argv[1]);
   }
