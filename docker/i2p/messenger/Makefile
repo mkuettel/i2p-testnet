@@ -8,6 +8,9 @@ build/$(SERVER_EXEC): $(OBJS)
 build/%.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
+install: build/$(SERVER_EXEC)
+	install -m 644 build/$(SERVER_EXEC) /usr/local/bin/tcpserver
+
 .PHONY: clean
 clean:
 	$(RM) build/*
