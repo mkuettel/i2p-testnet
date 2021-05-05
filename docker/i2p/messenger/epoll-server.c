@@ -12,10 +12,15 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <signal.h>
 
 #include "utils.h"
 
-#define MAXFDS 16 * 1024
+FILE *msglogfd;
+volatile bool msglogclosed = false;
+
+// TODO: increase this if more than 256 nodes are required
+#define MAXFDS 256
 
 typedef enum {
     INITIAL_ACK,
@@ -24,8 +29,8 @@ typedef enum {
     IN_LOG_DATA
 } ProcessingState;
 
-#define SENDBUF_SIZE 1024
-#define MSGLOG_SIZE 1024
+#define SENDBUF_SIZE 128
+#define MSGLOG_SIZE 512
 
 typedef struct {
   ProcessingState state;
@@ -72,6 +77,9 @@ fd_status_t on_peer_connected(int sockfd, const struct sockaddr_in* peer_addr,
   peerstate->sendptr = 0;
   peerstate->sendbuf_end = 0;
 
+  bzero(peerstate->logbuf, MSGLOG_SIZE);
+  peerstate->logbufpos = 0;
+
   // Signal that this socket is ready for reading now.
   return fd_status_R;
 }
@@ -108,14 +116,10 @@ fd_status_t on_peer_ready_recv(int sockfd) {
       assert(0 && "can't reach here");
       break;
     case WAIT_FOR_MSG:
-      printf("wait for msg\n");
+      /* printf("wait for msg\n"); */
       if (buf[i] == '^') {
         peerstate->state = IN_MSG;
-
-        bzero(peerstate->logbuf, MSGLOG_SIZE);
-        peerstate->logbufpos = 0;
-
-        printf("in msg\n");
+        /* printf("in msg\n"); */
       }
       break;
     case IN_MSG:
@@ -132,13 +136,23 @@ fd_status_t on_peer_ready_recv(int sockfd) {
         uint64_t arrival_microseconds = (uint64_t)tv.tv_sec * (uint64_t)1000000 + tv.tv_usec;
         snprintf(&peerstate->logbuf[peerstate->logbufpos], MSGLOG_SIZE - peerstate->logbufpos - 1, ",%ld", arrival_microseconds);
 
-        printf("log message: %s\n", peerstate->logbuf);
+        /* printf("got message: %s\n", peerstate->logbuf); */
+        fprintf(msglogfd, "%s\n", peerstate->logbuf);
+
+        // clean logbuf for next msg
+        bzero(peerstate->logbuf, MSGLOG_SIZE);
+        peerstate->logbufpos = 0;
+
+
         /* send back that we got the message */
         assert(peerstate->sendbuf_end < SENDBUF_SIZE);
         peerstate->sendbuf[peerstate->sendbuf_end++] = 'K';
         ready_to_send = true;
+
       } else {
         assert(peerstate->logbufpos < MSGLOG_SIZE);
+
+        // copy data data to log
         peerstate->logbuf[peerstate->logbufpos++] = buf[i];
       }
       break;
@@ -184,14 +198,40 @@ fd_status_t on_peer_ready_send(int sockfd) {
   }
 }
 
+void close_msglogfile() {
+    if(!msglogclosed) {
+        msglogclosed = true;
+        printf("Closing message log\n");
+        fclose(msglogfd);
+    }
+    exit(SIGINT);
+}
+
 int main(int argc, const char** argv) {
   setvbuf(stdout, NULL, _IONBF, 0);
 
   int portnum = 2323;
+  const char* msglogfilename = "msglog.csv";
+
   if (argc >= 2) {
-    portnum = atoi(argv[1]);
+    msglogfilename = argv[1];
+  } else if (argc >= 3) {
+    portnum = atoi(argv[2]);
+  } else {
+      printf("Usage: %s msglogfilename [portnum]", argv[0]);
+      return 0;
   }
+
   printf("Serving on port %d\n", portnum);
+  printf("Logging to file %s\n", msglogfilename);
+
+  msglogfd = fopen(msglogfilename, "a");
+  if (msglogfd == NULL) {
+      perror_die("Could not open logfile %s");
+  }
+  atexit(close_msglogfile);
+  signal(SIGINT, close_msglogfile);
+  signal(SIGTERM, close_msglogfile);
 
   int listener_sockfd = listen_inet_socket(portnum);
   make_socket_non_blocking(listener_sockfd);
