@@ -9,6 +9,7 @@
 #include <string.h>
 #include <sys/epoll.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -16,13 +17,21 @@
 
 #define MAXFDS 16 * 1024
 
-typedef enum { INITIAL_ACK, WAIT_FOR_MSG, IN_MSG } ProcessingState;
+typedef enum {
+    INITIAL_ACK,
+    WAIT_FOR_MSG,
+    IN_MSG,
+    IN_LOG_DATA
+} ProcessingState;
 
 #define SENDBUF_SIZE 1024
+#define MSGLOG_SIZE 1024
 
 typedef struct {
   ProcessingState state;
   uint8_t sendbuf[SENDBUF_SIZE];
+  uint8_t logbuf[SENDBUF_SIZE];
+  int logbufpos;
   int sendbuf_end;
   int sendptr;
 } peer_state_t;
@@ -99,17 +108,38 @@ fd_status_t on_peer_ready_recv(int sockfd) {
       assert(0 && "can't reach here");
       break;
     case WAIT_FOR_MSG:
+      printf("wait for msg\n");
       if (buf[i] == '^') {
         peerstate->state = IN_MSG;
+
+        bzero(peerstate->logbuf, MSGLOG_SIZE);
+        peerstate->logbufpos = 0;
+
+        printf("in msg\n");
       }
       break;
     case IN_MSG:
+      if (buf[i] == '*') {
+        peerstate->state = IN_LOG_DATA;
+      }
+      break;
+    case IN_LOG_DATA:
       if (buf[i] == '$') {
         peerstate->state = WAIT_FOR_MSG;
-      } else {
+
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        uint64_t arrival_microseconds = (uint64_t)tv.tv_sec * (uint64_t)1000000 + tv.tv_usec;
+        snprintf(&peerstate->logbuf[peerstate->logbufpos], MSGLOG_SIZE - peerstate->logbufpos - 1, ",%ld", arrival_microseconds);
+
+        printf("log message: %s\n", peerstate->logbuf);
+        /* send back that we got the message */
         assert(peerstate->sendbuf_end < SENDBUF_SIZE);
-        peerstate->sendbuf[peerstate->sendbuf_end++] = buf[i] + 1;
+        peerstate->sendbuf[peerstate->sendbuf_end++] = 'K';
         ready_to_send = true;
+      } else {
+        assert(peerstate->logbufpos < MSGLOG_SIZE);
+        peerstate->logbuf[peerstate->logbufpos++] = buf[i];
       }
       break;
     }
