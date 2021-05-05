@@ -39,8 +39,16 @@ teardown() {
     RESEED_IP=10.23.0.10
 
     url=$(generate_node_config 11 | jq -r '.i2pd_11.environment.RESEED_WAIT_URL')
-    echo "$url"
     [ "$url" = "http://$RESEED_IP:8443/i2pseeds.su3" ]
+}
+
+@test "generate_node_config sets adds volume for i2pd data" {
+    echo '{"network": {"private": false}}' > config.json
+    config_file=config.json
+
+    volume_spec=$(generate_node_config 5 | jq -r '.i2pd_5.volumes[0]')
+    echo "$volume_spec"
+    [ "$volume_spec" = "./docker/volumes/i2pd-data-5:/home/i2pd/data" ]
 }
 
 @test "generate_node_config doesn't set reseeder in public network" {

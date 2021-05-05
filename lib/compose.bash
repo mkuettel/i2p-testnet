@@ -47,8 +47,10 @@ generate_node_config() {
 
     jq  --arg ipv4_address "$ipv4_address" \
         --arg name "\${COMPOSE_PROJECT_NAME}_i2pd_$id" \
+        --arg volume_dir "./docker/volumes/i2pd-data-$1:/home/i2pd/data" \
         ' .container_name = $name
         | .networks["i2ptestnet"]["ipv4_address"] = $ipv4_address
+        | .volumes += [$volume_dir]
         ' \
         < "$base_dir"/docker/i2p-node-base.json \
         > "$nodefile"
