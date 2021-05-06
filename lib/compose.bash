@@ -48,11 +48,9 @@ generate_node_config() {
     local segment3=$((id / 256 + 128))
     local segment4=$((id % 256))
 
-    local ipv4_address="10.23.${segment3}.${segment4}"
-
     local nodefile="$(mktemp)"
 
-    jq  --arg ipv4_address "$ipv4_address" \
+    jq  --arg ipv4_address "10.23.${segment3}.${segment4}" \
         --arg name "\${COMPOSE_PROJECT_NAME}_i2pd_$id" \
         --arg volume_dir "./docker/volumes/i2pd-data-$1:/home/i2pd/data" \
         ' .container_name = $name
@@ -80,8 +78,7 @@ generate_all_node_configs() {
         for i in $(seq 1 "$amount"); do
             generate_node_config "$i"
         done
-    )   | jq -s 'add' \
-        | jq '{"version": "3.8", "services": .}'
+    )   | jq -s 'add | {"version": "3.8", "services": .}'
 }
 
 
