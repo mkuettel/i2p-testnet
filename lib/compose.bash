@@ -25,7 +25,22 @@ collect_router_infos() {
         done
     done
 
+    # generate and distribute addressbook
+    generate_addressbook > "addressbook.csv"
+    for i in $(seq 1 "$amount"); do
+        echo "copying addrbook $i"
+        # docker cp "addressbook.csv" "${COMPOSE_PROJECT_NAME}_i2pd_${i}":/home/i2pd/data/addressbook/addresses.csv
+        cp "addressbook.csv" "docker/volumes/i2pd-data-$i"/addressbook/addresses.csv
+    done
+
     touch "$reseed_netdb_dir"/.router-infos-collected
+}
+
+generate_addressbook() {
+    printf "%s\n" "$base_dir"/docker/volumes/i2pd-data-*/destinations/* \
+        | sed 's@^.*docker/volumes/i2pd-data-\([0-9]\+\)/destinations/\(.*\).dat$@tcpsrv-\1.i2p,\2@g' \
+        | sort -t '-' -n -k2
+
 }
 
 generate_node_config() {
