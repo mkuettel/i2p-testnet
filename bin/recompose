@@ -85,9 +85,9 @@ export COMPOSE_PROJECT_NAME=testnet
 export NETWORK_NAME
 
 if [[ "$(getconf network.private)" == "true" ]]; then
-    # delete remains of previous run
-    rm "$reseed_netdb_dir"/.router-infos-collected || true
-    rm "$reseed_netdb_dir"/routerInfo-*.dat || true
+    # delete remains of previous run, if they're there
+    rm "$reseed_netdb_dir"/.router-infos-collected 2>/dev/null || true
+    rm "$reseed_netdb_dir"/routerInfo-*.dat 2>/dev/null || true
 
     collect_router_infos &
 fi
