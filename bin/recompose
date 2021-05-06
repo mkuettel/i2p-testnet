@@ -11,7 +11,7 @@ display_help() {
     echo "Usage: recompose [-h] [-t] [config-file]"
     echo ""
     echo "  -h              Show this help screen"
-    echo "  -t              Start the testnet with profile testing"
+    echo "  -c              start with clean new volumes"
     echo "  config-file     The JSON configuration file to use to"
     echo "                  configure the testnet"
     echo "                  Default: config.json"
@@ -19,16 +19,16 @@ display_help() {
 
 
 # Variables for command line arguments
-test=0
+new_volumes=0
 
 OPTIND=1
-while getopts "h?t" opt; do
+while getopts "h?c" opt; do
     case "$opt" in
     h|\?)
         display_help
         exit 0
         ;;
-    t)  test=1
+    c)  new_volumes=1
         ;;
     # f)  output_file=$OPTARG
     #     ;;
@@ -69,9 +69,17 @@ echo "done"
 
 COMPOSE_ARGS+=("-f" "$base_dir"/docker/nodes.generated.override.yml)
 
-if [ "$test" -eq 1 ]; then
-    export COMPOSE_PROFILES=test
+UP_ARGS=(--build --remove-orphans --force-recreate --always-recreate-deps)
+if [ "$new_volumes" -eq 1 ]; then
+    echo "Cleaning up volumes and old data..."
+    cleanup_volume_dirs
+    UP_ARGS+=("--renew-anon-volumes")
 fi
+echo "Creating new volume directories"
+# we do this do make sure they're owned by us
+# and not by root when the docker container starts
+# NOTE: this requires the host user to run this script to have uid 1000
+create_volume_dirs "$num_nodes"
 
 export COMPOSE_PROJECT_NAME=testnet
 export NETWORK_NAME
@@ -85,10 +93,7 @@ if [[ "$(getconf network.private)" == "true" ]]; then
 fi
 
 docker-compose "${COMPOSE_ARGS[@]}" \
-    up --build \
-    --remove-orphans \
-    --force-recreate \
-    --always-recreate-deps || \
+    up "${UP_ARGS[@]}" || \
     read -rp "It seems something went wrong. Press enter to stop the testnet...." _
 
 docker-compose "${COMPOSE_ARGS[@]}" down

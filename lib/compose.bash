@@ -76,3 +76,13 @@ generate_all_node_configs() {
     )   | jq -s 'add' \
         | jq '{"version": "3.8", "services": .}'
 }
+
+
+cleanup_volume_dirs() {
+    rm -r "$base_dir"/docker/volumes/i2pd-data-* || true
+}
+
+create_volume_dirs() {
+    local amount="$1"
+    seq -f "$base_dir/docker/volumes/i2pd-data-%g" 1 "$amount" | xargs mkdir || true
+}
