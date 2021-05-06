@@ -19,8 +19,8 @@
 FILE *msglogfd;
 volatile bool msglogclosed = false;
 
-// TODO: increase this if more than 256 nodes are required
-#define MAXFDS 256
+// TODO: increase this if more than 300 nodes are required
+#define MAXFDS 300
 
 typedef enum {
     INITIAL_ACK,
@@ -117,7 +117,7 @@ fd_status_t on_peer_ready_recv(int sockfd) {
       break;
     case WAIT_FOR_MSG:
       /* printf("wait for msg\n"); */
-      if (buf[i] == '^') {
+      if (buf[i] == '"') {
         peerstate->state = IN_MSG;
         /* printf("in msg\n"); */
       }
@@ -134,10 +134,11 @@ fd_status_t on_peer_ready_recv(int sockfd) {
         struct timeval tv;
         gettimeofday(&tv, NULL);
         uint64_t arrival_microseconds = (uint64_t)tv.tv_sec * (uint64_t)1000000 + tv.tv_usec;
-        snprintf(&peerstate->logbuf[peerstate->logbufpos], MSGLOG_SIZE - peerstate->logbufpos - 1, ",%ld", arrival_microseconds);
+        snprintf(&peerstate->logbuf[peerstate->logbufpos], MSGLOG_SIZE - peerstate->logbufpos - 1, ",%lu", arrival_microseconds);
 
         /* printf("got message: %s\n", peerstate->logbuf); */
         fprintf(msglogfd, "%s\n", peerstate->logbuf);
+        fflush(msglogfd);
 
         // clean logbuf for next msg
         bzero(peerstate->logbuf, MSGLOG_SIZE);
@@ -146,7 +147,7 @@ fd_status_t on_peer_ready_recv(int sockfd) {
 
         /* send back that we got the message */
         assert(peerstate->sendbuf_end < SENDBUF_SIZE);
-        peerstate->sendbuf[peerstate->sendbuf_end++] = 'K';
+        peerstate->sendbuf[peerstate->sendbuf_end++] = '\n';
         ready_to_send = true;
 
       } else {
