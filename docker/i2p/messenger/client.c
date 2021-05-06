@@ -3,79 +3,26 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/time.h>
+#include <unistd.h>
+
+#include "utils.h"
+
 #define MAX 80
 #define PORT 8080
 #define SA struct sockaddr
 
-void func(int sockfd)
-{
-    char buff[MAX];
-    int n;
-    for (;;) {
-        bzero(buff, sizeof(buff));
-        printf("Enter the string : ");
-        n = 0;
-        while ((buff[n++] = getchar()) != '\n')
-            ;
-        write(sockfd, buff, sizeof(buff));
-        bzero(buff, sizeof(buff));
-        read(sockfd, buff, sizeof(buff));
-        printf("From Server : %s", buff);
-        if ((strncmp(buff, "exit", 4)) == 0) {
-            printf("Client Exit...\n");
-            break;
-        }
-    }
-}
-  
-int main()
-{
-    int sockfd, connfd;
-    struct sockaddr_in servaddr, cli;
-  
-    // socket create and varification
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd == -1) {
-        printf("socket creation failed...\n");
-        exit(0);
-    }
-    else
-        printf("Socket successfully created..\n");
-    bzero(&servaddr, sizeof(servaddr));
-  
-    // assign IP, PORT
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    servaddr.sin_port = htons(PORT);
-  
-    // connect the client socket to server socket
-    if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) {
-        printf("connection with the server failed...\n");
-        exit(0);
-    }
-    else
-        printf("connected to the server..\n");
-  
-    // function for chat
-    func(sockfd);
-  
-    // close the socket
-    close(sockfd);
-}
+#define METADATASIZE 256
+// 64 kb + metadata to be saved by the server
+#define MSGBUFLEN (1024 * 64) + METADATASIZE
 
 #include "proxysocket.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#if defined(_WIN32) && !defined(__MINGW64_VERSION_MAJOR)
-#define strcasecmp stricmp
-#define strncasecmp strnicmp
-#endif
-
-#define DST_HOST "api.ipify.org"
-#define DST_PATH "/"
-#define DST_PORT 80
 
 void logger (int level, const char* message, void* userdata)
 {
@@ -92,22 +39,57 @@ void logger (int level, const char* message, void* userdata)
   fprintf(stdout, "%s: %s\n", lvl, message);
 }
 
+void init_rng() {
+  struct timeval seedtime;
+  gettimeofday(&seedtime, NULL);
+  srand((unsigned int)seedtime.tv_sec ^ (unsigned int)seedtime.tv_usec ^ (unsigned int)getpid());
+}
+
+int generate_message(uint8_t* msgbuf, size_t bufsize, unsigned int message_size, unsigned int originator_id, const char * destination) {
+
+    if (bufsize < message_size + METADATASIZE) {
+        fprintf(stderr, "Error: can't send messages that big, hardcoded limit to %lu", bufsize);
+        exit(1);
+    }
+
+    msgbuf[0] = '"';
+    for (int i = 1; i < message_size - 1; i++) {
+        uint8_t byte = rand() % 256;
+        // make sure we don't accidentally send a delimiter
+        // delimiters have been chosen to have the last bit not set.
+        if (byte == '\0' || byte == '"' || byte == '*' || byte == '$') {
+            byte |= 0x01;
+        }
+        msgbuf[i] = byte;
+    }
+    msgbuf[message_size - 1] = '*';
+
+    // add timestamp and metadata
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    uint64_t sent_at_microseconds = (uint64_t)tv.tv_sec * (uint64_t)1000000 + tv.tv_usec;
+    unsigned int metadatasize = snprintf(&msgbuf[message_size], bufsize - message_size, "%u,%s,%u,%ld$", originator_id, destination, message_size, sent_at_microseconds);
+
+    return message_size + metadatasize;
+}
+
 void show_help ()
 {
   printf(
-    "Usage:  example_ipify [-h] [-t proxy_type] [-s proxy_server] [-p proxy_port] [-l proxy_user] [-w proxy_pass]\n"
+    "Usage:  messenger [-h] [-S proxy_server] [-P proxy_port] [-d destination] [-p dest_port]\n"
     "Parameters:\n"
     "  -h             \tdisplay command line help\n"
-    "  -s proxy_server\tproxy server host name or IP address\n"
-    "  -p proxy_port  \tproxy port number\n"
-    "  -l proxy_user  \tproxy authentication login\n"
-    "  -w proxy_pass  \tproxy authentication password\n"
+    "  -S proxy_server\tproxy server host name or IP address\n"
+    "  -P proxy_port  \tproxy port number\n"
+    "  -d destination \the hostname or ip of the server connected through the proxy\n"
+    "  -p dest_port   \tdestination port number\n"
+    "  -m messagesize \tsize of the message to send in Kb\n"
+    "  -o originator  \tan identifier for the originator of the message"
+    "  -n num_mess    \tnumber of messages to send\n"
     "  -v             \tverbose mode\n"
     "  -d             \tdebug mode (overrides -v)\n"
-    "Version: %s\n"
     "Description:\n"
-    "Gets public IP address from " DST_HOST " optionally using a proxy server.\n"
-    "This can be used to check if web (HTTP) access is working.", proxysocket_get_version_string()
+    "This client is used to send messages to measure the latency of the i2p network\n"
   );
 }
 
@@ -124,33 +106,66 @@ int main (int argc, char* argv[])
   //get command line parameters
   int i;
   char* param;
-  const char* proxyhost = NULL;
-  uint16_t proxyport = 0;
+
+  //default is a local i2pd socks5 proxy
+  const char* proxyhost = "127.0.0.1";
+  uint16_t proxyport = 4445;
+  const char* destinationhost = NULL;
+  uint16_t destinationport = 2323;
+  uint16_t messagesize_kb = 64;
+  uint16_t num_messages = 1;
+  unsigned int originator_id = 0;
   int verbose = -1;
+
   for (i = 1; i < argc; i++) {
     //check for command line parameters
     if (argv[i][0] && (argv[i][0] == '/' || argv[i][0] == '-')) {
-      switch (tolower(argv[i][1])) {
+      switch (argv[i][1]) {
         case 'h' :
         case '?' :
           show_help();
           return 0;
           break;
-        case 's' :
+        case 'S' :
           GET_PARAM()
           if (param)
             proxyhost = param;
           break;
-        case 'p' :
+        case 'P' :
           GET_PARAM()
           if (param)
             proxyport = strtol(param, (char**)NULL, 10);
+          break;
+        case 'd' :
+          GET_PARAM()
+          if (param)
+            destinationhost = param;
+          break;
+        case 'p' :
+          GET_PARAM()
+          if (param)
+            destinationport = strtol(param, (char**)NULL, 10);
+          break;
+        case 'm' :
+          GET_PARAM()
+          if (param)
+            messagesize_kb = strtol(param, (char**)NULL, 10);
+          break;
+        case 'n' :
+          GET_PARAM()
+          if (param)
+            num_messages = strtol(param, (char**)NULL, 10);
+          break;
+        case 'o' :
+          GET_PARAM()
+          if (param)
+            originator_id = strtol(param, (char**)NULL, 10);
           break;
         case 'v' :
           if (verbose < PROXYSOCKET_LOG_INFO)
             verbose = PROXYSOCKET_LOG_INFO;
           break;
-        case 'd' :
+        case 'D' :
           verbose = PROXYSOCKET_LOG_DEBUG;
           break;
         default:
@@ -161,6 +176,8 @@ int main (int argc, char* argv[])
     }
   }
 
+  init_rng();
+
   //make the connection via the specified proxy
   SOCKET sock;
   char* errmsg;
@@ -169,17 +186,33 @@ int main (int argc, char* argv[])
   proxysocketconfig proxy = proxysocketconfig_create_direct(5);
   proxysocketconfig_set_logging(proxy, logger, (int*)&verbose);
 
+  // use i2pd socks5 proxy, resolve names through the proxy
   proxysocketconfig_use_proxy_dns(proxy, 1);
   proxysocketconfig_add_proxy(proxy, PROXYSOCKET_TYPE_SOCKS5, proxyhost, proxyport, NULL, NULL);
+
   //connect
   errmsg = NULL;
-  sock = proxysocket_connect(proxy, DST_HOST, DST_PORT, &errmsg);
+  sock = proxysocket_connect(proxy, destinationhost, destinationport, &errmsg);
   if (sock == INVALID_SOCKET) {
     fprintf(stderr, "%s\n", (errmsg ? errmsg : "Unknown error"));
   } else {
     //send data
-    const char* http_request = "GET " DST_PATH " HTTP/1.0\r\nHost: " DST_HOST "\r\n\r\n";
-    send(sock, http_request, strlen(http_request), 0);
+    uint8_t msgbuf[MSGBUFLEN] = {};
+
+    unsigned int bytes_to_send = generate_message(msgbuf, MSGBUFLEN, messagesize_kb * 1024, originator_id, destinationhost);
+
+    unsigned int message_position = 0;
+    while (message_position < bytes_to_send) {
+        int bytes_sent = send(sock, &msgbuf[message_position], bytes_to_send - message_position, 0);
+        if (bytes_sent == -1) {
+            perror_die("send");
+        } else if (bytes_sent == 0) {
+            die("connection via proxy closed");
+        }
+
+        message_position += bytes_sent;
+    }
+
     //receive data and skip header
     char* line;
     int prevempty = 0;
