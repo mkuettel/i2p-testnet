@@ -11,16 +11,27 @@ num_router_infos() {
     printf "%s\n" "$reseed_netdb_dir"/routerInfo-*.dat | wc -l
 }
 
+
+destination_addr_exists() {
+    local voldir="$1"
+    [[ "$(ls -1 "$voldir"/destinations | grep -c '.dat$')" -ge 1 && -s "$(printf '%s' "$voldir"/destinations/*.dat)"  ]]
+}
+
 collect_router_infos() {
     local amount="$(getconf 'nodes.amount')"
-    local num_errs=0
+    local voldir=
+    local oknodes=0
+    local starttimefile=`mktemp`
 
     # copy until we have a router info from every node
-    while [[ "$(num_router_infos)" -lt "$amount" ]]; do
+    while [[ "$oknodes" -lt "$amount" ]]; do
+        oknodes=0
         for i in $(seq 1 "$amount"); do
-            srcri="$base_dir/docker/volumes/i2pd-data-$i"/router.info
-            if [[ -s "$srcri" ]]; then
-                cp "$srcri" "$reseed_netdb_dir"/routerInfo-"$i".dat
+            voldir="$base_dir/docker/volumes/i2pd-data-$i"
+            # is router info & destination ready?
+            if [[ -s "$voldir/router.info" && "$voldir/router.info" -nt "$starttimefile" ]] && destination_addr_exists "$voldir"; then
+                cp "$voldir/router.info" "$reseed_netdb_dir"/routerInfo-"$i".dat
+                oknodes=$((oknodes + 1))
             fi
         done
     done
@@ -29,11 +40,13 @@ collect_router_infos() {
     generate_addressbook > "addressbook.csv"
     for i in $(seq 1 "$amount"); do
         echo "copying addrbook $i"
-        # docker cp "addressbook.csv" "${COMPOSE_PROJECT_NAME}_i2pd_${i}":/home/i2pd/data/addressbook/addresses.csv
         cp "addressbook.csv" "docker/volumes/i2pd-data-$i"/addressbook/addresses.csv
     done
 
+    sleep 1
+    sync
     touch "$reseed_netdb_dir"/.router-infos-collected
+    sync
 }
 
 generate_addressbook() {

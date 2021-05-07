@@ -88,12 +88,8 @@ fd_status_t on_peer_ready_recv(int sockfd) {
   assert(sockfd < MAXFDS);
   peer_state_t* peerstate = &global_state[sockfd];
 
-  if (peerstate->state == INITIAL_ACK ||
-      peerstate->sendptr < peerstate->sendbuf_end) {
-    // Until the initial ACK has been sent to the peer, there's nothing we
-    // want to receive. Also, wait until all data staged for sending is sent to
-    // receive more data.
-    return fd_status_W;
+  if (peerstate->state == INITIAL_ACK) {
+    return fd_status_R;
   }
 
   uint8_t buf[1024];
@@ -147,8 +143,7 @@ fd_status_t on_peer_ready_recv(int sockfd) {
 
         /* send back that we got the message */
         assert(peerstate->sendbuf_end < SENDBUF_SIZE);
-        peerstate->sendbuf[peerstate->sendbuf_end++] = '\n';
-        ready_to_send = true;
+        /* peerstate->sendbuf[peerstate->sendbuf_end++] = '\n'; */
 
       } else {
         assert(peerstate->logbufpos < MSGLOG_SIZE);
@@ -159,10 +154,12 @@ fd_status_t on_peer_ready_recv(int sockfd) {
       break;
     }
   }
+
+  ready_to_send = (peerstate->sendptr < peerstate->sendbuf_end);
   // Report reading readiness iff there's nothing to send to the peer as a
   // result of the latest recv.
-  return (fd_status_t){.want_read = !ready_to_send,
-                       .want_write = ready_to_send};
+  return (fd_status_t){.want_read = true,
+                       .want_write = false};
 }
 
 fd_status_t on_peer_ready_send(int sockfd) {
@@ -171,7 +168,7 @@ fd_status_t on_peer_ready_send(int sockfd) {
 
   if (peerstate->sendptr >= peerstate->sendbuf_end) {
     // Nothing to send.
-    return fd_status_RW;
+    return fd_status_R;
   }
   int sendlen = peerstate->sendbuf_end - peerstate->sendptr;
   int nsent = send(sockfd, &peerstate->sendbuf[peerstate->sendptr], sendlen, 0);
