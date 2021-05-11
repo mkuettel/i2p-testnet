@@ -23,13 +23,13 @@ collect_router_infos() {
     local oknodes=0
     local starttimefile=`mktemp`
 
-    # copy until we have a router info from every node
+    # copy until we have an up-to-date router info from every node
     while [[ "$oknodes" -lt "$amount" ]]; do
         oknodes=0
         for i in $(seq 1 "$amount"); do
             voldir="$base_dir/docker/volumes/i2pd-data-$i"
             # is router info & destination ready?
-            if [[ -s "$voldir/router.info" && "$voldir/router.info" -nt "$starttimefile" ]] && destination_addr_exists "$voldir"; then
+            if [[ -s "$voldir/router.info" && ! "$voldir/router.info" -ot "$starttimefile" ]] && destination_addr_exists "$voldir"; then
                 cp "$voldir/router.info" "$reseed_netdb_dir"/routerInfo-"$i".dat
                 oknodes=$((oknodes + 1))
             fi
