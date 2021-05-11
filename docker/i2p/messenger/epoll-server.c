@@ -34,11 +34,8 @@ typedef enum {
 
 typedef struct {
   ProcessingState state;
-  uint8_t sendbuf[SENDBUF_SIZE];
   uint8_t logbuf[SENDBUF_SIZE];
   int logbufpos;
-  int sendbuf_end;
-  int sendptr;
 } peer_state_t;
 
 // Each peer is globally identified by the file descriptor (fd) it's connected
@@ -73,10 +70,6 @@ fd_status_t on_peer_connected(int sockfd, const struct sockaddr_in* peer_addr,
   // Initialize state to send back a '*' to the peer immediately.
   peer_state_t* peerstate = &global_state[sockfd];
   peerstate->state = WAIT_FOR_MSG;
-  /* peerstate->sendbuf[0] = '*'; */
-  peerstate->sendptr = 0;
-  peerstate->sendbuf_end = 0;
-
   bzero(peerstate->logbuf, MSGLOG_SIZE);
   peerstate->logbufpos = 0;
 
@@ -87,10 +80,6 @@ fd_status_t on_peer_connected(int sockfd, const struct sockaddr_in* peer_addr,
 fd_status_t on_peer_ready_recv(int sockfd) {
   assert(sockfd < MAXFDS);
   peer_state_t* peerstate = &global_state[sockfd];
-
-  if (peerstate->state == INITIAL_ACK) {
-    return fd_status_R;
-  }
 
   uint8_t buf[1024];
   int nbytes = recv(sockfd, buf, sizeof buf, 0);
@@ -136,15 +125,7 @@ fd_status_t on_peer_ready_recv(int sockfd) {
         fprintf(msglogfd, "%s\n", peerstate->logbuf);
         fflush(msglogfd);
 
-        // clean logbuf for next msg
-        bzero(peerstate->logbuf, MSGLOG_SIZE);
-        peerstate->logbufpos = 0;
-
-
-        /* send back that we got the message */
-        assert(peerstate->sendbuf_end < SENDBUF_SIZE);
-        /* peerstate->sendbuf[peerstate->sendbuf_end++] = '\n'; */
-
+        return fd_status_NORW;
       } else {
         assert(peerstate->logbufpos < MSGLOG_SIZE);
 
@@ -154,46 +135,16 @@ fd_status_t on_peer_ready_recv(int sockfd) {
       break;
     }
   }
-
-  ready_to_send = (peerstate->sendptr < peerstate->sendbuf_end);
   // Report reading readiness iff there's nothing to send to the peer as a
   // result of the latest recv.
-  return (fd_status_t){.want_read = true,
-                       .want_write = false};
+  return fd_status_R;
+  /* return (fd_status_t){.want_read = !ready_to_send, */
+  /*                      .want_write = ready_to_send}; */
 }
 
 fd_status_t on_peer_ready_send(int sockfd) {
   assert(sockfd < MAXFDS);
-  peer_state_t* peerstate = &global_state[sockfd];
-
-  if (peerstate->sendptr >= peerstate->sendbuf_end) {
-    // Nothing to send.
-    return fd_status_R;
-  }
-  int sendlen = peerstate->sendbuf_end - peerstate->sendptr;
-  int nsent = send(sockfd, &peerstate->sendbuf[peerstate->sendptr], sendlen, 0);
-  if (nsent == -1) {
-    if (errno == EAGAIN || errno == EWOULDBLOCK) {
-      return fd_status_W;
-    } else {
-      perror_die("send");
-    }
-  }
-  if (nsent < sendlen) {
-    peerstate->sendptr += nsent;
-    return fd_status_W;
-  } else {
-    // Everything was sent successfully; reset the send queue.
-    peerstate->sendptr = 0;
-    peerstate->sendbuf_end = 0;
-
-    // Special-case state transition in if we were in INITIAL_ACK until now.
-    if (peerstate->state == INITIAL_ACK) {
-      peerstate->state = WAIT_FOR_MSG;
-    }
-
-    return fd_status_R;
-  }
+  return fd_status_R;
 }
 
 void close_msglogfile() {
