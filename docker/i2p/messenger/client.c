@@ -85,7 +85,6 @@ void show_help ()
     "  -p dest_port   \tdestination port number\n"
     "  -m messagesize \tsize of the message to send in Kb\n"
     "  -o originator  \tan identifier for the originator of the message"
-    "  -n num_mess    \tnumber of messages to send\n"
     "  -v             \tverbose mode\n"
     "  -d             \tdebug mode (overrides -v)\n"
     "Description:\n"
@@ -113,7 +112,6 @@ int main (int argc, char* argv[])
   const char* destinationhost = NULL;
   uint16_t destinationport = 2323;
   uint16_t messagesize_kb = 64;
-  uint16_t num_messages = 1;
   unsigned int originator_id = 0;
   int verbose = -1;
 
@@ -150,11 +148,6 @@ int main (int argc, char* argv[])
           GET_PARAM()
           if (param)
             messagesize_kb = strtol(param, (char**)NULL, 10);
-          break;
-        case 'n' :
-          GET_PARAM()
-          if (param)
-            num_messages = strtol(param, (char**)NULL, 10);
           break;
         case 'o' :
           GET_PARAM()
@@ -210,31 +203,11 @@ int main (int argc, char* argv[])
             die("connection via proxy closed");
         }
 
+        printf("send %d bytes, pos %u of %u\n", bytes_sent, message_position, bytes_to_send);
         message_position += bytes_sent;
     }
+    printf("message of length %u sent from %u to %s\n", messagesize_kb, originator_id, destinationhost);
 
-    //receive data and skip header
-    char* line;
-    int prevempty = 0;
-    int istext = 0;
-    errmsg = NULL;
-    while ((line = socket_receiveline(sock)) != NULL) {
-      if (prevempty)
-        break;
-      if (strncasecmp(line, "Content-Type: text/plain", 24) == 0)
-        istext = 1;
-      prevempty = (line[0] ? 0 : 1);
-      free(line);
-    }
-    if (!line) {
-      errmsg = strdup("No content received");
-    } else if (!istext) {
-      errmsg = strdup("No plain text content returned");
-    } else if (line) {
-      printf("Your IP address: %s\n", line);
-      free(line);
-    }
-    //disconnect
     proxysocket_disconnect(proxy, sock);
   }
   proxysocketconfig_free(proxy);
