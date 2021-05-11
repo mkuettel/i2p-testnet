@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+set -eu -o pipefail
+base_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# shellcheck source=../lib/compose.bash
+source "$base_dir"/lib/compose.bash
+
+config_file="${1:-"$base_dir/config.json"}"
+num_nodes="$(getconf 'nodes.amount')"
+
+for i in $(seq 1 10000); do
+    randnode1="$((1 + RANDOM % num_nodes))"
+    randnode2="$((1 + RANDOM % num_nodes))"
+
+    echo "$i: $randnode1 -> $randnode2"
+    # docker exec -d testnet_i2pd_"$randnode1" sh -c '( echo -n "" | nc -w 10 -l -p 2323 127.0.0.1; echo "received $(date +%s%N)" ) >> data/msgs'
+    docker exec testnet_i2pd_"$randnode1" messenger -S 127.0.0.1 -P 4445 -d tcpsrv-"$randnode2".i2p -p 2323 -o "$randnode1" || true
+
+    sleep 10
+done
