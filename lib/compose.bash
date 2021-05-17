@@ -1,7 +1,9 @@
 
+BANDWIDTHS=(100000)
+
 getconf() {
     local attr="$1"
-    jq ".$attr" < "$config_file" || (
+    jq -r ".$attr" < "$config_file" || (
         echo "ERROR: could not read configuration file" 1>&2
         exit 4
     )
@@ -68,10 +70,12 @@ generate_node_config() {
         --arg name "\${COMPOSE_PROJECT_NAME}_i2pd_$id" \
         --arg volume_dir "./docker/volumes/i2pd-data-$1:/home/i2pd/data" \
         --arg confarg "i2pd_config_file=$i2pd_config_file" \
+        --arg bandwidth "$(get_bandwidth "$id")" \
         ' .container_name = $name
         | .networks["i2ptestnet"]["ipv4_address"] = $ipv4_address
         | .volumes += [$volume_dir]
         | .build.args += [$confarg]
+        | .environment["BANDWIDTH"] = $bandwidth
         ' \
         < "$base_dir"/docker/i2p-node-base.json \
         > "$nodefile"
@@ -96,6 +100,18 @@ generate_all_node_configs() {
             generate_node_config "$i" "$i2pd_config_file"
         done
     )   | jq -s 'add | {"version": "3.8", "services": .}'
+}
+
+get_bandwidth() {
+    local id="$1"
+    local n="${#BANDWIDTHS[@]}"
+    local idx="$(( (id - 1) % n ))"
+
+    echo "${BANDWIDTHS[idx]}"
+}
+
+read_bandwidths() {
+    readarray -t BANDWIDTHS < <(getconf 'nodes.bandwidth[]')
 }
 
 

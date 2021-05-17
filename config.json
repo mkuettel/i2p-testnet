@@ -9,6 +9,7 @@
     },
     "nodes": {
         "amount": 64,
-        "config_file": "docker/i2p/conf/i2pd.org.conf",
+        "config_file": "conf/i2pd.org.conf",
+        "bandwidth": [8192, 4096, 2048]
     }
 }
