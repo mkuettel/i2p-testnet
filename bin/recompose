@@ -63,6 +63,7 @@ else
 fi
 
 num_nodes="$(getconf 'nodes.amount')"
+i2pd_config_file="$(getconf 'nodes.config_file')"
 echo -n "Generate configurations for $num_nodes nodes ... "
 generate_all_node_configs "$num_nodes" > "$base_dir"/docker/nodes.generated.override.yml
 echo "done"

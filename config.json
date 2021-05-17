@@ -4,20 +4,11 @@
         "private": true
     },
     "reseeder": {
-        "router_infos_per_node": 10,
-        "num_different_seed_files": 10
+        "router_infos_per_node": 64,
+        "num_different_seed_files": 48 
     },
     "nodes": {
-        "amount": 20,
-        "tunnels": {
-            "inbound": {
-                "quantity": 3,
-                "length": 3
-            },
-            "inbound": {
-                "quantity": 3,
-                "length": 3
-            }
-        }
+        "amount": 64,
+        "config_file": "docker/i2p/conf/i2pd.org.conf",
     }
 }

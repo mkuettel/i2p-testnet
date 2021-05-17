@@ -58,6 +58,7 @@ generate_addressbook() {
 
 generate_node_config() {
     local id="$1"
+    local i2pd_config_file="$2"
     local segment3=$((id / 256 + 128))
     local segment4=$((id % 256))
 
@@ -66,9 +67,11 @@ generate_node_config() {
     jq  --arg ipv4_address "10.23.${segment3}.${segment4}" \
         --arg name "\${COMPOSE_PROJECT_NAME}_i2pd_$id" \
         --arg volume_dir "./docker/volumes/i2pd-data-$1:/home/i2pd/data" \
+        --arg confarg "i2pd_config_file=$i2pd_config_file" \
         ' .container_name = $name
         | .networks["i2ptestnet"]["ipv4_address"] = $ipv4_address
         | .volumes += [$volume_dir]
+        | .build.args += [$confarg]
         ' \
         < "$base_dir"/docker/i2p-node-base.json \
         > "$nodefile"
@@ -86,10 +89,11 @@ generate_node_config() {
 
 generate_all_node_configs() {
     local amount="$1"
+    local i2pd_config_file="$2"
 
     (
         for i in $(seq 1 "$amount"); do
-            generate_node_config "$i"
+            generate_node_config "$i" "$i2pd_config_file"
         done
     )   | jq -s 'add | {"version": "3.8", "services": .}'
 }
