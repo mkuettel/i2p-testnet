@@ -25,6 +25,8 @@ done
 resultdir=results/"$num_nodes-$(date +'%Y-%m-%d_%H%M%S')"
 mkdir -p "$resultdir"
 
+cp config.json "$resultdir"
+
 for i in $(seq 1 "$num_nodes") ; do
    cp -r docker/volumes/i2pd-data-"$i" "$resultdir"
 done
