@@ -98,6 +98,7 @@ if [[ "$(getconf network.private)" == "true" ]]; then
     rm "$reseed_netdb_dir"/routerInfo-*.dat 2>/dev/null || true
 
     collect_router_infos &
+    sleep 1
 fi
 
 docker-compose "${COMPOSE_ARGS[@]}" \
