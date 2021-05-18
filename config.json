@@ -4,12 +4,17 @@
         "private": true
     },
     "reseeder": {
-        "router_infos_per_node": 64,
-        "num_different_seed_files": 48 
+        "router_infos_per_node": 6,
+        "num_different_seed_files": 8
     },
     "nodes": {
-        "amount": 64,
+        "amount": 8,
         "config_file": "conf/i2pd.org.conf",
         "bandwidth": [8192, 4096, 2048]
+    },
+    "measurement": {
+        "message_size_kb": 64,
+        "num_messages": 1024,
+        "sleep_interval": 6
     }
 }
