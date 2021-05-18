@@ -12,22 +12,31 @@ message_size_kb="$(getconf 'measurement.message_size_kb')"
 num_messages="$(getconf 'measurement.num_messages')"
 sleep_interval="$(getconf 'measurement.sleep_interval')"
 
-for i in $(seq 1 "$num_messages"); do
+resultdir=results/"$num_nodes-$(date +'%Y-%m-%d_%H%M%S')"
+mkdir -p "$resultdir"
+cp config.json "$resultdir"
+
+# monitor all CPUs/RAM/SWAP/block device io/context switches/run queue & load average/and network device traffic
+sar -u -P ALL -r -S -b -w -q -n DEV 5 > "$resultdir/resource-usage" &
+sarpid=$!
+trap "kill -2 $sarpid" SIGTERM SIGINT EXIT
+
+( for i in $(seq 1 "$num_messages"); do
     randnode1="$((1 + RANDOM % num_nodes))"
     randnode2="$((1 + RANDOM % num_nodes))"
 
-    echo "$i: $randnode1 -> $randnode2"
+
+    echo "$(date +'%Y-%m-%d_%H%M%S'): $i: $randnode1 -> $randnode2"
     docker exec testnet_i2pd_"$randnode1" messenger -S 127.0.0.1 -P 4445 -d tcpsrv-"$randnode2".i2p -p 2323 -o "$randnode1" -m "$message_size_kb" || true
 
     sleep "$sleep_interval"
-done
-
-resultdir=results/"$num_nodes-$(date +'%Y-%m-%d_%H%M%S')"
-mkdir -p "$resultdir"
-
-cp config.json "$resultdir"
+done ) 2>&1 | tee "$resultdir/measurement.log"
 
 for i in $(seq 1 "$num_nodes") ; do
    cp -r docker/volumes/i2pd-data-"$i" "$resultdir"
 done
 
+docker logs testnet_reseed > "$resultdir"/reseed.log
+for i in $(seq 1 "$num_nodes") ; do
+    docker logs testnet_i2pd_"$i" > "$resultdir"/i2pd_"$i".log
+done
