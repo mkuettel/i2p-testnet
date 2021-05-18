@@ -88,6 +88,7 @@ echo "Creating new volume directories"
 # NOTE: this requires the host user to run this script to have uid 1000
 create_volume_dirs "$num_nodes"
 
+export COMPOSE_PARALLEL_LIMIT=1000
 export COMPOSE_PROJECT_NAME=testnet
 export NETWORK_NAME
 
