@@ -9,11 +9,9 @@ pkgs.mkShell {
     docker-compose
     moreutils
     bats
+    sysstat
     jq
-  ] ++ (with python38Packages; [
-    python
-    pylint
-  ]);
+  ];
 
   shellHook = ''
     export NIX_PATH="nixpkgs=${nixpkgs}:."
