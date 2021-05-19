@@ -15,8 +15,8 @@
 #define SA struct sockaddr
 
 #define METADATASIZE 256
-// 64 kb + metadata to be saved by the server
-#define MSGBUFLEN (1024 * 64) + METADATASIZE
+// 256 kb + metadata to be saved by the server
+#define MSGBUFLEN (1024 * 256) + METADATASIZE
 
 #include "proxysocket.h"
 #include <stdlib.h>
