@@ -1,8 +1,17 @@
+#!/usr/bin/env bash
 # make sure arp neighbor tables don't overflow
-# this works for at least 64 nodes
-sysctl net.ipv4.neigh.default.gc_thresh1=1024
-sysctl net.ipv4.neigh.default.gc_thresh2=2048
-sysctl net.ipv4.neigh.default.gc_thresh3=4096
+set -eu -o pipefail
+base_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# shellcheck source=../lib/compose.bash
+source "$base_dir"/lib/compose.bash
+num_nodes="$(getconf 'nodes.amount')"
+
+arp_table_size=$((num_nodes * num_nodes))
+
+sysctl net.ipv4.neigh.default.gc_thresh1=$arp_table_size
+sysctl net.ipv4.neigh.default.gc_thresh2=$((arp_table_size * 2))
+sysctl net.ipv4.neigh.default.gc_thresh3=$((arp_table_size * 2))
 
 # tcp
 # sysctl net.core.somaxconn=1024
