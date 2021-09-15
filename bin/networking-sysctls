@@ -5,6 +5,7 @@ base_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # shellcheck source=../lib/compose.bash
 source "$base_dir"/lib/compose.bash
+config_file="${1:-"$base_dir/config.json"}"
 num_nodes="$(getconf 'nodes.amount')"
 
 arp_table_size=$((num_nodes * num_nodes))
